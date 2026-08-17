@@ -1,24 +1,148 @@
 aid: edgee
 name: Edgee
-description: 'Edgee is a company surfaced as a portfolio company of serena and added to the API Evangelist
-  network as a stub for enrichment. Sector: ai-data. This profile is a lead awaiting the enrichment pipeline.'
+description: 'Edgee is a French edge-native AI Gateway that sits between coding agents and LLM providers,
+  intercepting, routing, compressing, metering and securing every request. Its OpenAI-compatible gateway
+  API at edgee.io exposes chat completions, an Anthropic Messages endpoint, an OpenAI Responses endpoint,
+  a model catalog of 230+ models across providers, token counting and a standalone compression endpoint,
+  while a separate Console API at api.edgee.app handles organization management, gateway key management,
+  BYOK provider keys and usage/cost export. A Rust CLI launches Claude Code, Codex, OpenCode, Cursor and
+  VS Code Copilot through the gateway, and official TypeScript, Python, Go and Rust SDKs wrap the same
+  surface. Edgee previously operated as an edge component runtime and data-collection platform at
+  edgee.cloud; that documentation now redirects to the AI Gateway product at edgee.ai.'
+image: https://www.edgee.ai/assets/img/og/og.jpg
 url: https://raw.githubusercontent.com/api-evangelist/edgee/refs/heads/main/apis.yml
 x-type: company
 x-source: serena-portfolio
-x-tier: stub
-x-tier-reason: portfolio-lead
 specificationVersion: '0.20'
 created: '2026-08-17'
 modified: '2026-08-17'
+x-enrichment:
+  date: '2026-08-17'
+  status: enriched
+  artifacts_added: 24
+  pass: local-v1
 tags:
 - Company
-- Ai Data
-apis: []
+- AI
+- LLM
+- AI Gateway
+- Agents
+- Developer Tools
+- Observability
+- FinOps
+- Edge Computing
+- Cost Management
+apis:
+- aid: edgee-ai-gateway
+  name: Edgee AI Gateway API
+  description: 'OpenAI-compatible AI Gateway API. One API for any model and any provider: chat completions,
+    Anthropic-format messages, OpenAI Responses, a live model catalog, token counting, and a standalone
+    token-compression endpoint. Authenticated with a bearer API key (or an Anthropic-style x-api-key header).'
+  humanURL: https://www.edgee.ai/docs/api-reference
+  baseURL: https://edgee.io
+  tags:
+  - AI
+  - LLM
+  - Chat Completions
+  - Token Compression
+  - Models
+  properties:
+  - type: OpenAPI
+    url: openapi/edgee-openapi-original.json
+  - type: Overlay
+    url: overlays/edgee-gateway-overlay.yaml
+  - type: Documentation
+    url: https://www.edgee.ai/docs/api-reference
+  - type: Authentication
+    url: https://www.edgee.ai/docs/api-reference/authentication
+- aid: edgee-console
+  name: Edgee Console API
+  description: 'Management API for an Edgee organization: export AI Gateway usage and cost data as CSV
+    or JSON, create/list/update/delete AI Gateway API keys, and configure custom BYOK provider keys.
+    Bearer-token authenticated with a Console token created in the Edgee Console.'
+  humanURL: https://www.edgee.ai/docs/api-reference/console-api-setup
+  baseURL: https://api.edgee.app
+  tags:
+  - Management
+  - Billing
+  - API Keys
+  - BYOK
+  properties:
+  - type: Documentation
+    url: https://www.edgee.ai/docs/api-reference/console-api-setup
+  - type: Authentication
+    url: https://www.edgee.ai/docs/api-reference/console-api-setup
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: DomainSecurity
+  url: security/edgee-domain-security.yml
 - type: Website
-  url: https://www.edgee.cloud/
+  url: https://www.edgee.ai/
+- type: DeveloperPortal
+  url: https://www.edgee.ai/docs
+- type: Documentation
+  url: https://www.edgee.ai/docs
+- type: APIReference
+  url: https://www.edgee.ai/docs/api-reference
+- type: GettingStarted
+  url: https://www.edgee.ai/docs/quickstart
+- type: Blog
+  url: https://www.edgee.ai/blog
+- type: GitHubOrganization
+  url: https://github.com/edgee-ai
+- type: Support
+  url: https://www.edgee.ai/contact
+- type: Pricing
+  url: https://www.edgee.ai/pricing
+- type: SignUp
+  url: https://www.edgee.ai/
+- type: TermsOfService
+  url: https://www.edgee.ai/terms
+- type: PrivacyPolicy
+  url: https://www.edgee.ai/privacy
+- type: StatusPage
+  url: https://status.edgee.ai/
+- type: ChangeLog
+  url: https://www.edgee.ai/changelog
+- type: TrustCenter
+  url: https://trust.edgee.ai/
+- type: Compliance
+  url: https://trust.edgee.ai/
+- type: Packages
+  url: packages/edgee-packages.yml
+- type: SDKs
+  url: packages/edgee-packages.yml
+- type: CLI
+  url: cli/edgee-cli.yml
+- type: MCPServer
+  url: mcp/edgee-mcp.yml
+- type: ToolCrosswalk
+  url: mcp/edgee-tool-crosswalk.yml
+- type: LLMsTxt
+  url: llms/edgee-llms.txt
+- type: Authentication
+  url: authentication/edgee-authentication.yml
+- type: Conventions
+  url: conventions/edgee-conventions.yml
+- type: ErrorCatalog
+  url: errors/edgee-problem-types.yml
+- type: ErrorCodes
+  url: errors/edgee-error-codes.yml
+- type: Lifecycle
+  url: lifecycle/edgee-lifecycle.yml
+- type: Conformance
+  url: conformance/edgee-conformance.yml
+- type: DataModel
+  url: data-model/edgee-data-model.yml
+- type: ChangeLog
+  url: changelog/edgee-changelog.yml
+- type: Plans
+  url: plans/edgee-plans-pricing.yml
+- type: RateLimits
+  url: rate-limits/edgee-rate-limits.yml
+- type: AgentSkill
+  url: skills/_index.yml

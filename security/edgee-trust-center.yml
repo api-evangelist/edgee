@@ -1,0 +1,48 @@
+generated: '2026-08-17'
+method: searched
+probe: false
+url: https://trust.edgee.ai/
+http_status: 200
+fetched: '2026-08-17'
+entity: Edgee Corporation
+platform: Bastion
+certifications:
+- SOC 2 Type 1
+- SOC 2 Type 2
+controls:
+  total: 82
+  categories: [Business Operations, Cloud Security, Human Resources, Data Protection]
+  note: Control counts read from the live trust center on 2026-08-17; they move as the program is
+    refreshed.
+subprocessors:
+  count: 5
+  listed: true
+  names_captured: false
+  note: The trust center states a subprocessor list of 5 exists; the names are behind the "View all"
+    control and were not captured.
+related_pages:
+- {name: Data Processing Agreement, url: 'https://www.edgee.ai/dpa', http_status: 200}
+- {name: Privacy Policy, url: 'https://www.edgee.ai/privacy', http_status: 200}
+- {name: Terms, url: 'https://www.edgee.ai/terms', http_status: 200}
+enterprise_controls:
+  source: https://www.edgee.ai/pricing
+  offered: [SSO/SAML authentication, Private gateway (SaaS or on-premises), Custom data residency
+      (EU or US), 'Custom privacy controls including PII redaction']
+  note: Offered as Enterprise-tier features rather than as a published security posture.
+vulnerability_disclosure:
+  found: false
+  note: 'No security.txt (404 on every host), no /security, /trust or /responsible-disclosure page
+    (404), no bug bounty program on HackerOne / Bugcrowd / Intigriti found, and no security@ contact
+    published. probe-security-programs.py returned vdp=none. Recorded as an absence — no Security or
+    VulnerabilityDisclosure pointer is wired in apis.yml. This is the clearest single gap in Edgee''s
+    otherwise credible security posture: a company with a SOC 2 Type 2 and no published way to report
+    a vulnerability.'
+  evidence:
+  - {url: 'https://www.edgee.ai/.well-known/security.txt', http_status: 404}
+  - {url: 'https://edgee.io/.well-known/security.txt', http_status: 404}
+  - {url: 'https://api.edgee.app/.well-known/security.txt', http_status: 404}
+  - {url: 'https://www.edgee.ai/security', http_status: 404}
+  - {url: 'https://www.edgee.ai/trust', http_status: 404}
+evidence:
+- {source: 'https://trust.edgee.ai/', keywords: [SOC 2 Type 2, SOC 2 Type 1, trust center,
+      subprocessors, controls], fetched: '2026-08-17'}

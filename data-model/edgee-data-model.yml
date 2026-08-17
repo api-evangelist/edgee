@@ -1,0 +1,158 @@
+generated: '2026-08-17'
+method: derived
+source: openapi/edgee-openapi-original.json
+note: 'Derived from the 44 component schemas and their $ref graph. Edgee''s data model is a
+  request/response model, not a persisted-resource model: nothing in the published API has an
+  addressable identity you can fetch later — no /v1/chat/completions/{id}, no session resource, no
+  organization resource. The only stable identifier surfaced anywhere is the model ID
+  (provider/model). Persisted entities (organizations, API keys, sessions, squads, tags, credits)
+  live behind the Console API, which publishes no spec, so they are recorded here as
+  documented_entities without schema backing.'
+identifier_conventions:
+- entity: Model
+  form: '{author_id}/{model_id}'
+  example: anthropic/claude-sonnet-4.5
+  note: On /v1/messages the Anthropic-format model ID is bare (claude-sonnet-4.5).
+- entity: Session
+  form: opaque session id
+  header: x-edgee-session-id
+  note: Issued by the CLI per `edgee launch` run; not fetchable over the published API.
+entities:
+- name: ChatCompletionRequest
+  root: true
+  operation: createChatCompletion
+  relationships:
+  - {type: has_many, target: Message, via: messages}
+  - {type: has_many, target: Tool, via: tools}
+  - {type: has_one, target: ToolChoiceTypedMode, via: tool_choice}
+  - {type: has_one, target: ToolChoiceSpecific, via: tool_choice}
+  - {type: has_one, target: CompressionModel, via: compression_model}
+- name: ChatCompletionResponse
+  root: true
+  operation: createChatCompletion
+  relationships:
+  - {type: has_many, target: ChatCompletionChoice, via: choices}
+  - {type: has_one, target: Usage, via: usage}
+  - {type: has_one, target: CompressionInfo, via: compression}
+  - {type: has_many, target: EdgeeToolExecuted, via: edgee_tools_executed}
+- name: ChatCompletionChoice
+  relationships:
+  - {type: has_one, target: Message, via: message}
+- name: Message
+  relationships:
+  - {type: has_many, target: ToolCall, via: tool_calls}
+- name: ToolCall
+  relationships:
+  - {type: has_one, target: FunctionCall, via: function}
+- name: Tool
+  relationships:
+  - {type: has_one, target: FunctionDefinition, via: function}
+- name: ToolChoiceSpecific
+  relationships:
+  - {type: has_one, target: ToolChoiceFunction, via: function}
+- name: Usage
+  relationships:
+  - {type: has_one, target: InputTokenDetails, via: prompt_tokens_details}
+  - {type: has_one, target: OutputTokenDetails, via: completion_tokens_details}
+- name: ChatCompletionChunk
+  streaming: true
+  relationships:
+  - {type: has_many, target: ChatCompletionChunkChoice, via: choices}
+  - {type: has_one, target: Usage, via: usage}
+- name: ChatCompletionChunkChoice
+  relationships:
+  - {type: has_one, target: Delta, via: delta}
+- name: ModelsResponse
+  root: true
+  operation: listModels
+  relationships:
+  - {type: has_many, target: Model, via: data}
+- name: Model
+  identity: id
+  note: 'Live catalog: GET /v1/models returned 230 models on 2026-08-17, each with id, object,
+    owned_by and created.'
+- name: CreateMessageRequest
+  root: true
+  operation: createMessage
+  format: anthropic
+  relationships:
+  - {type: has_many, target: MessageParam, via: messages}
+  - {type: has_many, target: AnthropicTool, via: tools}
+  - {type: has_one, target: ToolChoice, via: tool_choice}
+  - {type: has_many, target: ContentBlock, via: system}
+- name: MessageParam
+  relationships:
+  - {type: has_many, target: ContentBlock, via: content}
+- name: CreateMessageResponse
+  root: true
+  operation: createMessage
+  format: anthropic
+  relationships:
+  - {type: has_many, target: ContentBlock, via: content}
+  - {type: has_one, target: AnthropicUsage, via: usage}
+- name: ResponsesRequest
+  root: true
+  operation: createResponse
+  format: openai-responses
+  relationships:
+  - {type: has_many, target: ResponsesInputItem, via: input}
+  - {type: has_many, target: ResponsesTool, via: tools}
+  - {type: has_one, target: ResponsesToolChoiceFunction, via: tool_choice}
+  - {type: has_one, target: ToolChoiceTypedMode, via: tool_choice}
+  - {type: has_one, target: CompressionModel, via: compression_model}
+- name: ResponsesInputItem
+  relationships:
+  - {type: has_many, target: ResponsesContentPart, via: content}
+- name: ResponsesResponse
+  root: true
+  operation: createResponse
+  relationships:
+  - {type: has_many, target: ResponsesOutputItem, via: output}
+  - {type: has_one, target: ResponsesUsage, via: usage}
+- name: ResponsesOutputItem
+  relationships:
+  - {type: has_many, target: ResponsesOutputContent, via: content}
+- name: CountTokensRequest
+  root: true
+  operations: [countTokens, countTokensMessages]
+- name: CountTokensResponse
+  root: true
+  operations: [countTokens, countTokensMessages]
+- name: CompressRequest
+  root: true
+  operation: compress
+  relationships:
+  - {type: has_one, target: ChatCompletionRequest, via: 'oneOf'}
+  - {type: has_one, target: CreateMessageRequest, via: 'oneOf'}
+  - {type: has_one, target: ResponsesRequest, via: 'oneOf'}
+  note: 'The compress endpoint is polymorphic over all three request formats — the clearest structural
+    statement that the three inference surfaces are projections of one core.'
+- name: CompressResponse
+  root: true
+  operation: compress
+  relationships:
+  - {type: has_one, target: CompressMetadata, via: metadata}
+- name: ErrorResponse
+  root: true
+  applies_to_all_operations: true
+  detail: errors/edgee-problem-types.yml
+documented_entities:
+  note: 'Named in the docs and operated on by the Console API and MCP tools, but absent from any
+    published schema.'
+  entities:
+  - {name: Organization, source: 'https://www.edgee.ai/docs/api-reference/console-api-setup', id_form: 'orgId'}
+  - {name: Gateway API key, source: 'https://www.edgee.ai/docs/api-reference/console-api-manage-gateway-api-keys',
+    id_form: 'api_key_id', token_prefix: 'ek_live_'}
+  - {name: Provider key (BYOK), source: 'https://www.edgee.ai/docs/api-reference/console-api-provider-keys'}
+  - {name: Session, source: 'https://www.edgee.ai/docs/features/sessions', relationships: [has_one
+        git repo, has_many pull requests, has_many commits]}
+  - {name: Squad, source: 'https://www.edgee.ai/docs/features/squads'}
+  - {name: Member, source: 'https://www.edgee.ai/docs/features/team'}
+  - {name: Tag, source: 'https://www.edgee.ai/docs/features/alerts'}
+  - {name: Alert rule, source: 'https://www.edgee.ai/docs/features/alerts'}
+  - {name: Usage limit, source: 'https://www.edgee.ai/docs/features/usage-limits'}
+counts:
+  schemas: 44
+  entities_with_relationships: 19
+  relationships: 34
+  documented_entities_without_schema: 9

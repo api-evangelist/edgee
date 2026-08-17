@@ -1,0 +1,95 @@
+generated: '2026-08-17'
+method: searched
+source: openapi/edgee-openapi-original.json
+docs: https://www.edgee.ai/docs/api-reference/authentication
+note: 'Baseline derived from the OpenAPI securitySchemes, then upgraded from the docs. Edgee runs TWO
+  separate credential systems on two hosts and says so explicitly in its own documentation: gateway
+  API keys for https://edgee.io, and Console tokens for https://api.edgee.app. They are not
+  interchangeable.'
+summary:
+  types:
+  - apiKey
+  - http
+  api_key_in:
+  - header
+  oauth2_flows: []
+  https_required: true
+  credential_systems: 2
+schemes:
+- name: bearerAuth
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  description: Bearer authentication header of the form `Bearer <token>`, where `<token>` is
+    your API key. More info [here](/docs/api-reference/authentication)
+  applies_to: https://edgee.io
+  sources:
+  - openapi/edgee-openapi-original.json
+- name: apiKeyAuth
+  type: apiKey
+  in: header
+  parameter: x-api-key
+  description: Anthropic-style API key authentication using the x-api-key header
+  applies_to: https://edgee.io
+  sources:
+  - openapi/edgee-openapi-original.json
+- name: httpBasic
+  type: http
+  scheme: basic
+  description: 'Documented alternative to the bearer header: `-u <token>:` with a trailing colon so
+    curl does not prompt for a password. The token goes in the username position.'
+  applies_to: https://edgee.io
+  sources:
+  - https://www.edgee.ai/docs/api-reference/authentication
+  in_openapi: false
+- name: edgeeApiKeyPassthrough
+  type: apiKey
+  in: header
+  parameter: x-edgee-api-key
+  description: 'Claude CLI passthrough authentication. When set, the gateway uses this key instead of
+    the Authorization header.'
+  applies_to: https://edgee.io/v1/messages
+  operation: createMessage
+  sources:
+  - openapi/edgee-openapi-original.json
+- name: consoleBearer
+  type: http
+  scheme: bearer
+  description: 'Console API token, created in the Edgee Console under API Keys. Displayed once at
+    creation and not retrievable afterwards. Observed token prefix in the docs examples: ek_live_.'
+  applies_to: https://api.edgee.app
+  sources:
+  - https://www.edgee.ai/docs/api-reference/console-api-setup
+  in_openapi: false
+  env_var: EDGEE_CONSOLE_API_TOKEN
+  failure_modes:
+  - {status: 401, body: '{"error": "Unauthorized", "message": "Invalid or expired API token"}'}
+  - {status: 403, body: '{"error": "Forbidden", "message": "Your token does not have permission to
+        access this resource"}'}
+key_management:
+  console: https://www.edgee.ai/docs/quickstart/api-key
+  capabilities: [view tokens and creation dates, revoke immediately, rotate, monitor per-token usage]
+  api: https://www.edgee.ai/docs/api-reference/console-api-manage-gateway-api-keys
+  api_note: Gateway API keys can be created, listed, updated and deleted over the Console API.
+  scoping:
+  - {control: model and provider access, source: 'https://www.edgee.ai/docs/features/model-access',
+    note: Which models and providers an organization may route to.}
+  - {control: usage limits, source: 'https://www.edgee.ai/docs/features/usage-limits', note: Spend
+      caps per key, per member or per squad over a daily, monthly or lifetime window.}
+  - {control: expiry, note: 'Keys can expire; an expired or inactive key returns 403 forbidden.'}
+oauth:
+  api_oauth: false
+  cli_oauth: true
+  note: '`edgee auth login` opens a browser for OAuth-based login and writes credentials to
+    ~/.config/edgee/credentials.toml (mode 600). No authorization-server metadata is published —
+    /.well-known/oauth-authorization-server returns 404 on every Edgee host — so there is no
+    documented scope surface and no scopes/ artifact is emitted.'
+sso:
+  available: true
+  tier: Enterprise
+  methods: [SSO, SAML]
+  source: https://www.edgee.ai/pricing
+env_vars:
+- {name: EDGEE_API_KEY, scope: gateway SDKs, source: 'https://www.edgee.ai/docs/sdk'}
+- {name: EDGEE_CONSOLE_API_TOKEN, scope: Console API, source: 'https://www.edgee.ai/docs/api-reference/console-api-setup'}
+- {name: EDGEE_TOKEN, scope: legacy stdio MCP server, source: 'https://github.com/edgee-ai/mcp-server-edgee'}

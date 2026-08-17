@@ -42,6 +42,17 @@
 > Full detail: **[Where this data comes from](https://apievangelist.com/about/where-our-data-comes-from)**
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
-Edgee is a company surfaced as a portfolio company of serena and added to the API Evangelist network as a stub for enrichment. Sector: ai-data. This profile is a lead awaiting the enrichment pipeline.
+Edgee is an edge-native AI Gateway that sits between coding agents and LLM providers, intercepting,
+routing, compressing, metering and securing every request. Its OpenAI-compatible gateway API at
+`https://edgee.io` exposes chat completions, an Anthropic Messages endpoint, an OpenAI Responses
+endpoint, a catalog of 230+ models across providers, token counting and a standalone compression
+endpoint. A separate Console API at `https://api.edgee.app` handles organization management, gateway
+key management, BYOK provider keys and usage/cost export. A Rust CLI launches Claude Code, Codex,
+OpenCode, Cursor and VS Code Copilot through the gateway, and official TypeScript, Python, Go and
+Rust SDKs wrap the same surface.
 
-Source: portfolio company of [serena](https://github.com/api-evangelist/serena) — https://www.edgee.cloud/
+Edgee previously operated as an edge component runtime and data-collection platform at
+`edgee.cloud`; that documentation now serves the AI Gateway doc index and points at
+[www.edgee.ai](https://www.edgee.ai/).
+
+Source: portfolio company of [serena](https://github.com/api-evangelist/serena) — https://www.edgee.ai/

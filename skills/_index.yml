@@ -1,0 +1,20 @@
+generated: '2026-08-17'
+method: generated
+source: openapi/edgee-openapi-original.json + https://www.edgee.ai/docs
+note: 'Every step in every skill is grounded in an operationId that exists verbatim in
+  openapi/edgee-openapi-original.json (createChatCompletion, createMessage, createResponse,
+  listModels, countTokens, countTokensMessages, compress). No skill is written for the Console API,
+  because it publishes no machine-readable contract to ground one in.'
+skills:
+- file: edgee-route-a-chat-completion.md
+  name: Route a chat completion through the Edgee AI Gateway
+  api: openapi/edgee-openapi-original.json
+  operations: [listModels, createChatCompletion]
+- file: edgee-estimate-and-compress-a-payload.md
+  name: Estimate and compress a payload before you spend on it
+  api: openapi/edgee-openapi-original.json
+  operations: [countTokens, compress, createChatCompletion]
+- file: edgee-migrate-anthropic-traffic.md
+  name: Move existing Anthropic Messages traffic onto Edgee
+  api: openapi/edgee-openapi-original.json
+  operations: [listModels, createMessage, countTokensMessages]

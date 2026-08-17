@@ -1,0 +1,53 @@
+generated: '2026-08-17'
+method: searched
+source: https://www.edgee.ai/docs/api-reference
+also:
+- https://www.edgee.ai/docs/api-reference/errors
+- https://www.edgee.ai/docs/features/usage-limits
+note: 'Edgee publishes NO numeric rate limit. The API reference says only that "Edgee has its own
+  rate limit technology to prevent abuse and ensure service stability" and that exceeding it returns
+  429 — no requests-per-second, per-minute or per-day figure, no per-endpoint table, and no
+  RateLimit-* / X-RateLimit-* response headers in the docs or in the OpenAPI. What Edgee DOES publish
+  in detail is a spend-limit system (usage limits and budgets), which throttles on dollars rather
+  than on request rate and shares the same 429 status. Both are recorded below and kept distinct:
+  limit_count counts published numeric REQUEST-rate limits, and that number is 0.'
+limit_count: 0
+rate_limits: []
+response_signaling:
+  status_on_exhaustion: 429
+  error_code: usage_limit_exceeded
+  error_type: rate_limit_error
+  headers:
+  - name: Retry-After
+    published: conditional
+    note: 'Docs instruct clients to "wait for the time specified in the Retry-After header (if
+      present)". Presence is not guaranteed and the header is not declared in the OpenAPI.'
+  - name: RateLimit-*
+    published: false
+  - name: X-RateLimit-*
+    published: false
+  guidance: Implement exponential backoff on 429; reduce request rate.
+  source: https://www.edgee.ai/docs/api-reference/errors
+spend_limits:
+  documented: true
+  source: https://www.edgee.ai/docs/features/usage-limits
+  description: 'Spend caps, not request-rate caps. Enforced per API key, per member, or per squad,
+    over a daily, monthly or lifetime window. Exceeding a cap returns the same 429 with
+    usage_limit_exceeded.'
+  scopes: [api-key, member, squad]
+  windows: [daily, monthly, lifetime]
+  unit: USD credits
+  alerting:
+    source: https://www.edgee.ai/docs/features/alerts
+    thresholds: ['50%', '80%', '100%']
+    alert_types: [api-key-budget, member-budget, squad-budget, tag-spend, remaining-credits]
+    channels: [email, slack]
+    tag_spend_windows: [1h, 3h, 6h, 12h, 24h]
+probe:
+  url: https://api.edgee.ai/v1/models
+  method: GET
+  http_status: 200
+  fetched: '2026-08-17'
+  observed_headers: [date, content-type, content-length]
+  finding: 'An unauthenticated 200 from the live model catalog returned no rate-limit headers of any
+    kind, which is consistent with the docs.'

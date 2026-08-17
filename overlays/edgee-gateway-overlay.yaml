@@ -1,0 +1,106 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for the Edgee AI Gateway API
+  version: 1.0.0
+extends: openapi/edgee-openapi-original.json
+x-generated: '2026-08-17'
+x-method: generated
+x-source: 'API Evangelist enrichment pipeline; every value below is derived from artifacts in this
+  repo or from a probe recorded in them. The harvested spec is never mutated.'
+actions:
+- target: $.info
+  update:
+    x-apievangelist-profile: https://apis.io/provider/edgee/
+    x-apievangelist-harvested: '2026-08-17'
+    x-apievangelist-source: https://www.edgee.ai/docs/api-reference/openapi.json
+    x-apievangelist-conventions: conventions/edgee-conventions.yml
+    x-apievangelist-errors: errors/edgee-problem-types.yml
+    x-apievangelist-error-codes: errors/edgee-error-codes.yml
+    x-apievangelist-lifecycle: lifecycle/edgee-lifecycle.yml
+    x-apievangelist-data-model: data-model/edgee-data-model.yml
+    x-apievangelist-authentication: authentication/edgee-authentication.yml
+    x-apievangelist-rate-limits: rate-limits/edgee-rate-limits.yml
+    x-apievangelist-plans: plans/edgee-plans-pricing.yml
+    x-apievangelist-mcp: mcp/edgee-mcp.yml
+    x-apievangelist-note: 'This spec covers only the AI Gateway inference plane on https://edgee.io.
+      The Edgee Console API (https://api.edgee.app) is documented in prose and has no published
+      machine-readable contract.'
+- target: $.info
+  update:
+    x-idempotency-supported: false
+    x-idempotency-note: No idempotency key or header is documented anywhere in the Edgee docs or in
+      this spec; retries re-execute and re-bill.
+- target: $.info
+  update:
+    x-error-format: custom-json
+    x-error-envelope: 'error.{message,type,code,param}'
+    x-rfc9457: false
+- target: $.servers
+  update:
+  - url: https://edgee.io
+    description: Edgee AI Gateway
+    x-apievangelist-verified: '2026-08-17'
+  - url: https://api.edgee.ai
+    description: Gateway alias (CNAME global.edgee.io) — GET /v1/models returned HTTP 200 with 230
+      models on 2026-08-17
+    x-apievangelist-method: probed
+- target: $.paths['/v1/models'].get
+  update:
+    x-apievangelist-anonymous: true
+    x-apievangelist-probe:
+      url: https://api.edgee.ai/v1/models
+      http_status: 200
+      fetched: '2026-08-17'
+      models_returned: 230
+      rate_limit_headers: none observed
+- target: $.paths['/v1/chat/completions'].post
+  update:
+    x-apievangelist-agent-skill: skills/edgee-route-a-chat-completion.md
+    x-apievangelist-action-class: acting
+    x-apievangelist-consequence: write
+    x-apievangelist-note: Billable. No idempotency contract, so a retry is a second charge.
+- target: $.paths['/v1/messages'].post
+  update:
+    x-apievangelist-agent-skill: skills/edgee-migrate-anthropic-traffic.md
+    x-apievangelist-action-class: acting
+    x-apievangelist-consequence: write
+- target: $.paths['/v1/responses'].post
+  update:
+    x-apievangelist-action-class: acting
+    x-apievangelist-consequence: write
+- target: $.paths['/v1/compress'].post
+  update:
+    x-apievangelist-agent-skill: skills/edgee-estimate-and-compress-a-payload.md
+    x-apievangelist-action-class: acting
+    x-apievangelist-consequence: read
+    x-apievangelist-note: Compresses a payload without calling any LLM provider, so it does not incur
+      provider token cost.
+- target: $.paths['/v1/count_tokens'].post
+  update:
+    x-apievangelist-agent-skill: skills/edgee-estimate-and-compress-a-payload.md
+    x-apievangelist-action-class: connected
+    x-apievangelist-consequence: read
+- target: $.paths['/v1/messages/count_tokens'].post
+  update:
+    x-apievangelist-action-class: connected
+    x-apievangelist-consequence: read
+- target: $.tags
+  update:
+  - name: Chat
+    description: Chat completion endpoints (OpenAI format)
+    x-apievangelist-capability: inference
+  - name: Messages
+    description: Messages endpoints (Anthropic format)
+    x-apievangelist-capability: inference
+  - name: Responses
+    description: Responses endpoints (OpenAI Responses API format)
+    x-apievangelist-capability: inference
+  - name: Models
+    description: Model management endpoints
+    x-apievangelist-capability: discovery
+  - name: Tokens
+    description: Token estimation endpoints
+    x-apievangelist-capability: accounting
+  - name: Compress
+    description: Standalone token compression endpoint
+    x-apievangelist-capability: optimization

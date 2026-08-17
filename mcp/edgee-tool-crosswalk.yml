@@ -1,0 +1,75 @@
+generated: '2026-08-17'
+method: derived
+source: mcp/edgee-mcp.yml + openapi/edgee-openapi-original.json + https://www.edgee.ai/docs/api-reference
+note: 'The headline finding of this crosswalk is that Edgee''s MCP surface and its OpenAPI surface do
+  not overlap AT ALL. The published OpenAPI describes only the AI Gateway inference plane (7
+  operations on https://edgee.io); the remote MCP tools operate on the session/observability plane of
+  the Console API (https://api.edgee.app), which has no published OpenAPI; and the legacy stdio MCP
+  server operates on the edgee.cloud edge-platform API, which is a third, retired surface. Coverage
+  is therefore 0/7 rest ops bound and 0/35 tools bound — not because the mapping was missed, but
+  because the three planes are genuinely disjoint. Live tools/list is auth-gated (HTTP 401), so tool
+  input schemas could not be read and no confidence above "low" is claimed for any binding.'
+surfaces:
+  openapi:
+    file: openapi/edgee-openapi-original.json
+    base: https://edgee.io
+    operations: 7
+    gated: false
+  mcp_remote:
+    url: https://api.edgee.app/mcp
+    tools: 4
+    gated: true
+    gate: 'HTTP 401 authentication_error on tools/list and initialize'
+  mcp_stdio:
+    package: '@edgee/mcp-server-edgee'
+    tools: 31
+    gated: false
+    targets: legacy edgee.cloud API (no published OpenAPI in this repo)
+  graphql: null
+crosswalk: []
+mcp_only:
+- tool: setSessionName
+  reason: Console-API session plane; no public REST operation is documented for naming a session.
+- tool: setSessionGitRepo
+  reason: Console-API session plane; no public REST operation is documented for linking a repo.
+- tool: addSessionPullRequest
+  reason: Console-API session plane; no public REST operation is documented for attaching a PR.
+- tool: addSessionCommit
+  reason: Console-API session plane; no public REST operation is documented for attaching a commit.
+- tool: edgee-* (31 legacy stdio tools)
+  reason: 'Targets the retired edgee.cloud edge-platform API (organizations, projects, components,
+    users). That API has no OpenAPI in this repo and is not the AI Gateway the published spec
+    describes.'
+rest_only:
+- capability: Inference
+  operations: [createChatCompletion, createMessage, createResponse]
+  reason: No MCP tool wraps inference; the gateway IS the inference path, so an agent calls it as an
+    OpenAI/Anthropic-compatible endpoint rather than as a tool.
+- capability: Model discovery
+  operations: [listModels]
+  reason: No MCP tool exposes the 230-model catalog; agents read it over REST at GET /v1/models
+    (unauthenticated, verified 200 on 2026-08-17).
+- capability: Token accounting
+  operations: [countTokens, countTokensMessages]
+  reason: No MCP tool exposes token estimation.
+- capability: Compression
+  operations: [compress]
+  reason: No MCP tool exposes standalone compression; compression is applied transparently in the
+    request path instead.
+undocumented_rest:
+- surface: Console API
+  base: https://api.edgee.app
+  documented_operations:
+  - {method: GET, path: '/v1/organizations/{orgId}/logs/export', doc: 'https://www.edgee.ai/docs/api-reference/console-api-export-logs'}
+  - {method: '-', path: gateway API key CRUD, doc: 'https://www.edgee.ai/docs/api-reference/console-api-manage-gateway-api-keys'}
+  - {method: '-', path: BYOK provider key management, doc: 'https://www.edgee.ai/docs/api-reference/console-api-provider-keys'}
+  reason: 'The Console API is documented in prose but excluded from the published openapi.json, and
+    api.edgee.app serves no spec at /openapi.json, /openapi.yaml, /swagger.json or /v1/openapi.json
+    (all 404 on 2026-08-17). This is the single largest machine-readable gap in Edgee''s surface.'
+coverage:
+  tools_named: 35
+  tools_bound: 0
+  mcp_only: 35
+  rest_ops_total: 7
+  rest_ops_with_tool: 0
+  overlap: none

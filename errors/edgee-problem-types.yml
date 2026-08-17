@@ -1,0 +1,93 @@
+generated: '2026-08-17'
+method: derived
+source: openapi/edgee-openapi-original.json
+docs: https://www.edgee.ai/docs/api-reference/errors
+format: custom-json
+rfc9457: false
+note: 'Edgee does NOT use RFC 9457 problem+json. Every 4xx/5xx response on the AI Gateway carries
+  application/json with a single ErrorResponse envelope: {"error": {"message", "type", "code",
+  "param"}}. The envelope is a hybrid — `message`/`code`/`param` follow OpenAI''s error shape and
+  `type` follows Anthropic''s category enum, which is consistent with the gateway being
+  simultaneously OpenAI- and Anthropic-compatible. The Console API (api.edgee.app) uses a DIFFERENT,
+  flatter envelope: {"error": "Unauthorized", "message": "..."} — a real inconsistency between the
+  two Edgee APIs, documented in
+  https://www.edgee.ai/docs/api-reference/console-api-setup.'
+envelope:
+  field: error
+  properties:
+  - {name: message, type: string, required: true, description: Human-readable error message.}
+  - {name: type, type: string, required: true, description: 'Anthropic-style high-level error
+      category. Always present.'}
+  - {name: code, type: string, nullable: true, description: Machine-readable error code.}
+  - {name: param, type: string, nullable: true, description: Name of the request parameter that
+      caused the error, when applicable.}
+  type_enum: [invalid_request_error, authentication_error, permission_error, not_found_error,
+    rate_limit_error, server_error, provider_error]
+problems:
+- status: 400
+  type: invalid_request_error
+  title: Bad Request
+  description: The request was unacceptable — often a missing required parameter, an invalid model
+    ID, a model not found, or an unsupported provider.
+  codes: [bad_model_id, model_not_found, provider_not_supported, streaming_not_supported,
+    invalid_json, invalid_tokenizer, invalid_request]
+  remediation: Fix the request parameters and retry.
+  source_operations: [createChatCompletion, createMessage, createResponse, countTokens,
+    countTokensMessages, compress]
+- status: 401
+  type: authentication_error
+  title: Unauthorized
+  description: No valid API key provided, or the Authorization header is missing or malformed.
+  codes: [unauthorized]
+  known_messages: ['Missing Authorization header', 'Invalid Authorization header format',
+    'Failed to retrieve API key: <error details>']
+  remediation: Check the API key and the Authorization header.
+  source_operations: [createChatCompletion, createMessage, createResponse, countTokens,
+    countTokensMessages, compress]
+- status: 403
+  type: permission_error
+  title: Forbidden
+  description: The API key does not have permission to perform the request — the key is inactive or
+    expired, or the requested model is not allowed for this key.
+  codes: [forbidden]
+  known_messages: ['API key is inactive', 'API key has expired', "Model '<model>' is not allowed for
+      this API key"]
+  remediation: Verify key permissions and status in the Edgee Console.
+  source_operations: [createChatCompletion, createMessage, createResponse, countTokensMessages,
+    compress]
+- status: 404
+  type: not_found_error
+  title: Not Found
+  description: The requested resource does not exist.
+  codes: []
+  source: https://www.edgee.ai/docs/api-reference/errors
+  note: Documented in the HTTP status summary but not attached to any operation in the OpenAPI.
+- status: 429
+  type: rate_limit_error
+  title: Too Many Requests
+  description: Too many requests hit the API too quickly, or a usage limit was exceeded.
+  codes: [usage_limit_exceeded]
+  known_messages: ['Usage limit exceeded: 1000.00 / 1000 tokens used', 'Organization has no credits
+      remaining']
+  remediation: Wait for the time in the Retry-After header if present, then retry with exponential
+    backoff.
+  source_operations: [createChatCompletion, createResponse]
+- status: 500
+  type: server_error
+  title: Internal Server Error
+  description: Something went wrong on Edgee's side.
+  codes: [internal_error]
+  remediation: Retry after a delay, or contact support if the issue persists.
+  source_operations: [createChatCompletion, createResponse, listModels]
+- status: 502
+  type: provider_error
+  title: Upstream provider error
+  description: The upstream LLM provider returned an error. Documented in the status-code summary and
+    present in the ErrorResponse type enum; not attached to an operation in the OpenAPI.
+  codes: [provider_error]
+  source: https://www.edgee.ai/docs/api-reference/errors
+coverage:
+  operations_with_error_responses: 7
+  operations_total: 7
+  distinct_statuses: 7
+  distinct_codes: 11

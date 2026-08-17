@@ -1,0 +1,119 @@
+generated: '2026-08-17'
+method: searched
+status: published
+source: https://www.edgee.ai/docs/features/sessions#enriching-sessions-with-mcp-tools
+deployment:
+  mode: both
+  endpoint: https://api.edgee.app/mcp
+  install: npx -y @edgee/mcp-server-edgee
+  package: https://www.npmjs.com/package/@edgee/mcp-server-edgee
+  auth: api-key
+  verified: probed
+  note: 'TWO different MCP surfaces, from two different eras of the company, and they are not the
+    same product.
+
+    (1) REMOTE — Edgee injects a virtual MCP server into every coding-agent session routed through
+    the gateway. The four session-metadata tools below are documented at
+    https://www.edgee.ai/docs/features/sessions and the 2026-08-13 changelog adds an organization
+    control to "disable automatic MCP injection", so the surface is real and provider-operated.
+    Edgee does not publish the endpoint URL in its docs; https://api.edgee.app/mcp was established
+    by PROBE on 2026-08-17 — GET returns 405 Method Not Allowed and POST returns HTTP 401
+    {"error":{"type":"authentication_error","message":"Unauthorized"}}, while every other path on
+    that host returns a 58-byte JSON 404, so the route exists and is auth-gated rather than a
+    catch-all. tools/list and initialize both 401 anonymously, so the live inputSchemas could not be
+    read; the tool list below comes from the docs (names + behaviour only).
+
+    (2) LOCAL-STDIO — @edgee/mcp-server-edgee is a first-party npm package for the LEGACY
+    edgee.cloud edge-platform API (organizations, projects, components, users). Last published
+    2025-11-11, before the AI Gateway product existed. It is recorded because it is genuinely
+    published and first-party, but it does not target the gateway.'
+servers:
+- name: edgee-session-tools
+  kind: remote
+  transport: http
+  url: https://api.edgee.app/mcp
+  auth: api-key
+  injected: true
+  status: published
+  discovery: probed
+  evidence:
+  - {url: 'https://api.edgee.app/mcp', method: GET, http_status: 405, fetched: '2026-08-17'}
+  - {url: 'https://api.edgee.app/mcp', method: 'POST tools/list', http_status: 401, body: '{"error":{"type":"authentication_error","message":"Unauthorized"}}',
+    fetched: '2026-08-17'}
+  tools:
+  - name: setSessionName
+    description: Set a human-readable name for the running session (defaults to "Untitled Session").
+    source: https://www.edgee.ai/docs/features/sessions
+  - name: setSessionGitRepo
+    description: 'Link the session to a git repo. Accepts owner/repo, a full URL, or an SSH URL; the
+      host (GitHub, GitLab, Bitbucket, Azure DevOps) is detected from the identifier. GitHub repos
+      require the Edgee GitHub App, otherwise silently ignored.'
+    source: https://www.edgee.ai/docs/features/sessions
+  - name: addSessionPullRequest
+    description: Attach a PR URL or #number to the session. Append-only and de-duped.
+    source: https://www.edgee.ai/docs/features/sessions
+  - name: addSessionCommit
+    description: Attach a commit SHA or commit URL to the session. Requires the session to have a
+      repo set first, otherwise silently ignored. Append-only and de-duped.
+    source: https://www.edgee.ai/docs/features/sessions
+  note: All four tools require the session ID, which the Edgee CLI exposes to the agent
+    automatically.
+- name: mcp-server-edgee
+  kind: local-stdio
+  transport: stdio
+  install: npx -y @edgee/mcp-server-edgee
+  package: '@edgee/mcp-server-edgee'
+  package_version: 0.2.0
+  package_published: '2025-11-11'
+  repository: https://github.com/edgee-ai/mcp-server-edgee
+  auth: api-key
+  auth_env: EDGEE_TOKEN
+  targets: legacy edgee.cloud edge-platform API
+  status: published
+  legacy: true
+  source: https://github.com/edgee-ai/mcp-server-edgee
+  tools:
+  - {name: 'edgee-listOrganizations', category: organizations}
+  - {name: 'edgee-getMyOrganization', category: organizations}
+  - {name: 'edgee-getOrganization', category: organizations}
+  - {name: 'edgee-createOrganization', category: organizations}
+  - {name: 'edgee-updateOrganization', category: organizations}
+  - {name: 'edgee-deleteOrganization', category: organizations}
+  - {name: 'edgee-listOrganizationUsers', category: organizations}
+  - {name: 'edgee-listProjects', category: projects}
+  - {name: 'edgee-getProject', category: projects}
+  - {name: 'edgee-createProject', category: projects}
+  - {name: 'edgee-updateProject', category: projects}
+  - {name: 'edgee-deleteProject', category: projects}
+  - {name: 'edgee-getProjectCounters', category: projects}
+  - {name: 'edgee-listProjectDomains', category: projects}
+  - {name: 'edgee-createProjectDomain', category: projects}
+  - {name: 'edgee-listProjectComponents', category: projects}
+  - {name: 'edgee-listPublicComponents', category: components}
+  - {name: 'edgee-listOrganizationComponents', category: components}
+  - {name: 'edgee-getComponentByUuid', category: components}
+  - {name: 'edgee-getComponentBySlug', category: components}
+  - {name: 'edgee-createComponent', category: components}
+  - {name: 'edgee-createComponentVersion', category: components}
+  - {name: 'edgee-getMe', category: users}
+  - {name: 'edgee-getUser', category: users}
+  - {name: 'edgee-listInvitations', category: users}
+  - {name: 'edgee-createInvitation', category: users}
+  - {name: 'edgee-deleteInvitation', category: users}
+  - {name: 'edgee-listApiTokens', category: users}
+  - {name: 'edgee-createApiToken', category: users}
+  - {name: 'edgee-deleteApiToken', category: users}
+  - {name: 'edgee-getUploadPresignedUrl', category: files}
+gateway_capability:
+  name: Tool Surface Reduction (virtual MCP)
+  status: alpha
+  source: https://www.edgee.ai/docs/features/token-compression
+  description: 'Beyond serving tools, Edgee acts ON other MCP servers: the gateway presents the
+    model a single virtual MCP server, classifies the user task, resolves which real MCP server is
+    needed and returns the routing decision to the client, which then executes the real server. The
+    IDE still exposes every MCP server and the agent still discovers tools through the standard MCP
+    protocol; only the model sees the virtual MCP. Marked "New in V2, alpha" by Edgee.'
+coverage:
+  remote_tools: 4
+  stdio_tools: 31
+  live_introspection: gated

@@ -1,0 +1,45 @@
+generated: '2026-08-17'
+method: searched
+source: https://www.edgee.ai/changelog
+http_status: 200
+scheme: dated
+current_version: null
+note: 'Edgee runs a dated product changelog rather than a versioned API changelog. Entries carry a
+  date and a headline but no version number, and breaking changes are not flagged as such. The page
+  is client-rendered, so only the entry currently in the rendered view could be captured; this is a
+  recent-window capture, not the full history. The API itself carries info.version 1.0.0 in the
+  OpenAPI, which has not moved as the changelog has.'
+breaking_changes_flagged: false
+versioned_entries: false
+entries:
+- date: '2026-08-13'
+  version: null
+  title: 15 new providers, new models & more
+  breaking: false
+  areas: [Gateway, Console, CLI]
+  highlights:
+  - area: Gateway
+    changes:
+    - Added 15 new providers, including Groq, Together AI and DeepInfra.
+    - Expanded model support — DeepSeek V4 Flash with a 1M context window, Qwen variants, and direct
+      xAI routes for several Grok versions.
+  - area: Console
+    changes:
+    - Filtering by team member, coding agent or API key.
+    - Export preserves the active filters.
+    - Organization control to disable automatic MCP injection.
+    - Redesigned Models interface.
+  - area: CLI
+    changes:
+    - Improved onboarding and automatic shell integration.
+    - Enriched session summaries.
+    - Better cross-platform behaviour on macOS, Linux and Windows.
+    - Relay fixes.
+related_release_streams:
+- name: Edgee CLI releases
+  url: https://github.com/edgee-ai/edgee/releases
+  latest_version: 0.5.2
+  source: 'https://github.com/edgee-ai/homebrew-tap Formula/edgee.rb'
+- name: SDK releases
+  detail: packages/edgee-packages.yml
+  note: TypeScript 0.1.8, Python 1.0.5, Go v0.1.6 and Rust 2.0.7 were all published on 2026-06-22.

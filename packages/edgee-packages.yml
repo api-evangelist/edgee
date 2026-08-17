@@ -1,0 +1,109 @@
+generated: '2026-08-17'
+method: searched
+source: https://www.edgee.ai/docs/sdk + npm/PyPI/crates.io/proxy.golang.org registry metadata
+note: 'Edgee publishes four official AI Gateway SDKs (TypeScript, Python, Go, Rust) plus a Rust CLI.
+  All four SDKs were last published on the same day (2026-06-22), which is consistent with a coordinated
+  release rather than drift. Two legacy packages remain from the previous edgee.cloud edge-platform
+  product (react-edgee, edgee-sdk crate, @edgee/mcp-server-edgee) and have not been republished since
+  2025; they are recorded here as official-but-legacy.'
+packages:
+- language: javascript
+  registry: npm
+  name: edgee
+  url: https://www.npmjs.com/package/edgee
+  install: npm install edgee
+  official: true
+  version: 0.1.8
+  published: '2026-06-22'
+  repository: https://github.com/edgee-ai/typescript-sdk
+  docs: https://www.edgee.ai/docs/sdk/typescript
+  note: Lightweight, type-safe TypeScript SDK for the Edgee AI Gateway. First published 2026-01-02.
+- language: python
+  registry: pypi
+  name: edgee
+  url: https://pypi.org/project/edgee/
+  install: pip install edgee
+  official: true
+  version: 1.0.5
+  published: '2026-06-22'
+  repository: https://github.com/edgee-ai/python-sdk
+  docs: https://www.edgee.ai/docs/sdk/python
+- language: go
+  registry: go
+  name: github.com/edgee-ai/go-sdk
+  url: https://pkg.go.dev/github.com/edgee-ai/go-sdk
+  install: go get github.com/edgee-ai/go-sdk
+  official: true
+  version: v0.1.6
+  published: '2026-06-22'
+  repository: https://github.com/edgee-ai/go-sdk
+  docs: https://www.edgee.ai/docs/sdk/go
+  note: Version and date read from https://proxy.golang.org/github.com/edgee-ai/go-sdk/@latest.
+- language: rust
+  registry: crates.io
+  name: edgee
+  url: https://crates.io/crates/edgee
+  install: cargo add edgee
+  official: true
+  version: 2.0.7
+  published: '2026-06-22'
+  repository: https://github.com/edgee-ai/rust-sdk
+  docs: https://www.edgee.ai/docs/sdk/rust
+  note: 'The docs show `cargo install edgee`; the crate is the Rust SDK library for the AI Gateway.
+    Date is the crates.io updated_at for the crate.'
+- language: rust
+  registry: github-releases
+  name: edgee (CLI)
+  url: https://github.com/edgee-ai/edgee
+  install: brew install edgee-ai/tap/edgee
+  official: true
+  version: 0.5.2
+  published: null
+  repository: https://github.com/edgee-ai/edgee
+  docs: https://www.edgee.ai/docs/features/cli
+  note: 'The CLI binary is distributed from GitHub Releases and a Homebrew tap, not a package registry.
+    Version 0.5.2 read verbatim from the tap formula
+    (github.com/edgee-ai/homebrew-tap/Formula/edgee.rb); the formula carries no release date, so
+    published is null. The macOS/Linux one-liner
+    (`curl -fsSL https://edgee.ai/install.sh | bash`) and the Windows PowerShell installer are
+    unpinned and float to latest, so a consumer cannot tell which version they receive either.'
+- language: javascript
+  registry: npm
+  name: '@edgee/mcp-server-edgee'
+  url: https://www.npmjs.com/package/@edgee/mcp-server-edgee
+  install: npx -y @edgee/mcp-server-edgee
+  official: true
+  version: 0.2.0
+  published: '2025-11-11'
+  repository: https://github.com/edgee-ai/mcp-server-edgee
+  legacy: true
+  note: 'Local stdio MCP server for the LEGACY edgee.cloud edge-platform API (organizations, projects,
+    components, users). Not republished since 2025-11-11 and it predates the AI Gateway product;
+    see mcp/edgee-mcp.yml.'
+- language: javascript
+  registry: npm
+  name: react-edgee
+  url: https://www.npmjs.com/package/react-edgee
+  install: npm install react-edgee
+  official: true
+  version: 1.3.1
+  published: '2025-12-04'
+  repository: https://github.com/edgee-cloud/react-edgee
+  legacy: true
+  note: React component that injects the legacy edgee.cloud data-collection SDK. Not part of the AI
+    Gateway product.
+- language: rust
+  registry: crates.io
+  name: edgee-sdk
+  url: https://crates.io/crates/edgee-sdk
+  install: cargo add edgee-sdk
+  official: true
+  version: 1.8.3
+  published: '2025-12-16'
+  legacy: true
+  note: '"The full-stack edge platform for your edge oriented applications" — the legacy edgee.cloud
+    component SDK, superseded by the `edgee` crate (2.x) for the AI Gateway.'
+counts:
+  official: 8
+  current: 5
+  legacy: 3

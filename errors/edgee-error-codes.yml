@@ -1,0 +1,98 @@
+generated: '2026-08-17'
+method: searched
+source: https://www.edgee.ai/docs/api-reference/errors
+also: openapi/edgee-openapi-original.json (components.schemas.ErrorResponse.error.code)
+note: 'The machine-readable code registry, complementing errors/edgee-problem-types.yml (which is
+  organised by HTTP status). Four of these codes — invalid_json, invalid_tokenizer, invalid_request
+  and provider_error — appear only in the OpenAPI schema description and are NOT listed on the docs
+  error page; the docs page is the thinner of the two sources.'
+envelope_field: error.code
+error_codes:
+- code: bad_model_id
+  status: 400
+  type: invalid_request_error
+  meaning: The model ID format is invalid.
+  example_message: "Invalid model ID: 'invalid-model'"
+  action: Use the provider/model form, e.g. anthropic/claude-sonnet-4.5.
+  documented: true
+- code: model_not_found
+  status: 400
+  type: invalid_request_error
+  meaning: The requested model does not exist or is not available.
+  example_message: "Model 'openai/gpt-1' not found"
+  action: Call GET /v1/models to list the models available to the key.
+  documented: true
+- code: provider_not_supported
+  status: 400
+  type: invalid_request_error
+  meaning: The requested provider is not supported for the specified model.
+  example_message: "Provider 'anthropic' is not supported for model 'openai/gpt-5.2'"
+  action: Route the model to a provider that serves it.
+  documented: true
+- code: streaming_not_supported
+  status: 400
+  type: invalid_request_error
+  meaning: Streaming on the Messages API is only supported when the model uses the Anthropic
+    provider.
+  action: Disable stream, or select an Anthropic-provider model.
+  documented: true
+- code: invalid_json
+  status: 400
+  type: invalid_request_error
+  meaning: The request body could not be parsed as JSON.
+  documented: false
+  source: OpenAPI schema only
+- code: invalid_tokenizer
+  status: 400
+  type: invalid_request_error
+  meaning: The tokenizer requested for token counting is not valid.
+  documented: false
+  source: OpenAPI schema only
+- code: invalid_request
+  status: 400
+  type: invalid_request_error
+  meaning: Generic invalid-request fallback.
+  documented: false
+  source: OpenAPI schema only
+- code: unauthorized
+  status: 401
+  type: authentication_error
+  meaning: Missing, malformed or unresolvable API key.
+  action: Send Authorization&#58; Bearer <api_key>, or the Anthropic-style x-api-key header.
+  documented: true
+- code: forbidden
+  status: 403
+  type: permission_error
+  meaning: The key is inactive or expired, or the model is not allowed for this key.
+  action: Check key status and model access rules in the Console.
+  documented: true
+- code: usage_limit_exceeded
+  status: 429
+  type: rate_limit_error
+  meaning: A usage limit was exceeded or the organization has no credits remaining.
+  action: Raise the limit or top up credits; back off exponentially.
+  documented: true
+- code: provider_error
+  status: 502
+  type: provider_error
+  meaning: The upstream LLM provider returned an error.
+  documented: false
+  source: OpenAPI schema only
+- code: internal_error
+  status: 500
+  type: server_error
+  meaning: An internal error occurred.
+  action: Retry after a delay; contact support if persistent.
+  documented: true
+console_api_errors:
+  base: https://api.edgee.app
+  envelope: '{"error": "<Status>", "message": "<detail>"}'
+  source: https://www.edgee.ai/docs/api-reference/console-api-setup
+  entries:
+  - {status: 401, error: Unauthorized, message: Invalid or expired API token}
+  - {status: 403, error: Forbidden, message: Your token does not have permission to access this
+      resource}
+counts:
+  gateway_codes: 12
+  documented_on_docs_page: 8
+  openapi_only: 4

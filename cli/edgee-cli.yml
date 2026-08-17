@@ -1,0 +1,97 @@
+generated: '2026-08-17'
+method: searched
+source: https://www.edgee.ai/docs/features/cli
+repository: https://github.com/edgee-ai/edgee
+license: Apache-2.0
+language: Rust
+version: 0.5.2
+version_source: https://github.com/edgee-ai/homebrew-tap Formula/edgee.rb
+name: edgee
+summary: 'The Edgee CLI is the primary product surface, not an accessory to the API. Its job is to
+  launch an existing coding agent (Claude Code, Codex, OpenCode, CodeBuddy, Crush) or desktop editor
+  (Cursor, VS Code Copilot) as a child process with Edgee routing already wired in, so the agent''s
+  traffic flows through the gateway with compression, cost tracking and session observability applied
+  and no code change on the caller''s side.'
+install:
+- method: shell
+  platform: macOS, Linux
+  command: curl -fsSL https://edgee.ai/install.sh | bash
+  pinned: false
+- method: homebrew
+  platform: macOS, Linux
+  command: brew install edgee-ai/tap/edgee
+  tap: https://github.com/edgee-ai/homebrew-tap
+- method: powershell
+  platform: Windows
+  command: irm https://edgee.ai/install.ps1 | iex
+  pinned: false
+- method: github-action
+  platform: CI
+  repository: https://github.com/edgee-ai/install-edgee-cli
+  note: First-party GitHub Action that installs the edgee binary into a workflow.
+verify: edgee --version
+commands:
+- group: auth
+  commands:
+  - {command: edgee auth login, description: 'Authenticate with Edgee for a provider. Opens a browser
+      for OAuth-based login; credentials are written to ~/.config/edgee/credentials.toml.', flags: ['--profile <profile-name>']}
+  - {command: edgee auth status, description: Show authentication status for all configured
+      providers, including the logged-in email and connection mode.}
+  - {command: edgee auth list, description: List all configured profiles.}
+  - {command: edgee auth switch, description: Switch to a different profile.}
+- group: launch
+  commands:
+  - {command: edgee launch, description: Launch a coding agent through Edgee.}
+  - {command: edgee launch claude, description: 'Launch Claude Code with ANTHROPIC_BASE_URL,
+      authentication headers and a session ID injected. Accepts any Claude Code argument.', connection_modes: [
+      Claude Pro/Max subscription with compression, API billing via Edgee keys]}
+  - {command: edgee launch codex, description: Launch Codex with Edgee routing configured. Accepts
+      any Codex argument., connection_modes: [ChatGPT Plus/Pro subscription with compression, API
+        billing via Edgee keys]}
+  - {command: edgee launch opencode, description: 'Launch OpenCode. The generated provider declares
+      each model context window and per-million-token rate from the Edgee catalog, so OpenCode
+      context gauge, auto-compaction and session cost readout work.'}
+  - {command: edgee launch codebuddy, description: Launch CodeBuddy with Edgee routing configured.}
+  - {command: edgee launch crush, description: 'Launch Charm Crush; the generated provider carries
+      context windows and rates so Crush stops treating every model as unknown and free.'}
+  - {command: edgee launch cursor, description: Start a local Edgee relay and open Cursor routed
+      through it. Requires Cursor to be installed.}
+  - {command: edgee launch copilot-vscode, description: Start a local Edgee relay and open VS Code
+      with GitHub Copilot routed through it.}
+- group: other
+  commands:
+  - {command: edgee stats, description: Show stats for the most recent sessions.}
+  - {command: 'edgee alias', description: 'Install launch aliases so each tool starts by its own name
+      — PATH shims in ~/.edgee/bin on macOS/Linux, shell aliases on Windows, desktop wrappers for
+      Cursor and Copilot. Scopable (edgee alias cursor) and reversible (edgee alias remove [tool]).'}
+  - {command: edgee reset, description: Reset credentials and connection mode for a provider.}
+  - {command: edgee self-update, description: Check for and install the latest CLI version.}
+  - {command: edgee init, description: Referenced in the configuration section as one of the commands
+      that manages credentials.toml.}
+configuration:
+  path: ~/.config/edgee/credentials.toml
+  permissions: '600'
+  format: toml
+  schema_version: 2
+  per_provider_fields: [api_key, email, connection]
+  connection_values: [plan, api]
+key_flows:
+- name: Launch a compressed coding session
+  steps:
+  - Verify authentication (prompt login if needed).
+  - Generate a unique session ID.
+  - Configure the provider environment variables and headers.
+  - Launch the coding agent as a child process with Edgee routing enabled.
+  - Print a session analytics URL when the session ends.
+- name: Self-tagging sessions
+  note: 'During a launched session the agent has access to four MCP tools (setSessionName,
+    setSessionGitRepo, addSessionPullRequest, addSessionCommit) that attach metadata to the running
+    session. See mcp/edgee-mcp.yml.'
+legacy:
+  name: edgee (edgee-cloud CLI)
+  repository: https://github.com/edgee-ai/cli
+  crate: edgee-cli
+  version: 1.0.0
+  published: '2026-01-10'
+  note: '"Edgee CLI to play with AI Gateway, tools, components…" — the earlier Rust CLI from the
+    edgee.cloud era, superseded by github.com/edgee-ai/edgee.'

@@ -1,0 +1,91 @@
+generated: '2026-08-17'
+method: searched
+source: https://www.edgee.ai/docs/api-reference
+also: openapi/edgee-openapi-original.json
+note: 'Cross-cutting request/response semantics for the Edgee AI Gateway (https://edgee.io) and the
+  Edgee Console API (https://api.edgee.app). The two APIs are deliberately separate systems with
+  separate credentials, separate hosts and — as recorded in errors/ — different error envelopes.'
+authentication:
+  style: bearer
+  header: 'Authorization: Bearer <api_key>'
+  alternatives:
+  - {scheme: http-basic, form: '-u <token>:', note: 'Documented as an accepted alternative to the
+      bearer header.'}
+  - {scheme: apiKey, header: x-api-key, note: 'Anthropic-style API key header, for Anthropic-SDK
+      compatibility.'}
+  - {scheme: apiKey, header: x-edgee-api-key, note: 'Claude CLI passthrough. When set, the gateway
+      uses this key instead of the Authorization header.'}
+  https_required: true
+  detail: authentication/edgee-authentication.yml
+  docs: https://www.edgee.ai/docs/api-reference/authentication
+idempotency:
+  supported: false
+  header: null
+  note: 'No idempotency key, header, or retry-safety contract is documented anywhere in the Edgee
+    docs, and no Idempotency-Key parameter appears in the OpenAPI. Retries of a chat/messages/
+    responses call therefore bill and execute again. Recorded as a genuine absence — no Idempotency
+    pointer is wired in apis.yml. Edgee DOES ship automatic retry, provider fallback and model
+    reroute on the SERVER side (https://www.edgee.ai/docs/features/retry-and-fallback), which is a
+    different thing from a client-side idempotency contract.'
+pagination:
+  supported: false
+  note: 'No paginated collection endpoint exists in the published OpenAPI. GET /v1/models returns the
+    full catalog (230 models on 2026-08-17) in a single unpaginated {"object":"list","data":[...]}
+    envelope. The Console API log export uses a period / from_date / to_date time window rather than
+    a cursor.'
+request_customization:
+  headers:
+  - {header: X-Edgee-Tags, type: request, applies_to: [createChatCompletion, createMessage,
+        createResponse], description: 'Comma-separated list of tags for categorizing and filtering
+      requests in analytics. The same tags drive tag-spend alerts and the Console API log export
+      filter.'}
+  - {header: X-Edgee-Debug, type: request, applies_to: [createChatCompletion, createMessage,
+        createResponse], description: Enable debug mode to include additional debugging information
+      in the response.}
+  - {header: X-Edgee-Compression-Model, type: request, applies_to: [createChatCompletion,
+        createMessage, createResponse], description: 'Compression bundle to apply; tunes the
+      compressor for the agentic style of the caller.'}
+  - {header: x-edgee-session-id, type: request, applies_to: [createMessage], description: 'Claude CLI
+      session identifier. Groups all messages from a single CLI session — this is the value the four
+      MCP session tools operate on.'}
+  - {header: X-Edgee-Provider, type: response, description: Which upstream provider actually served
+      the request.}
+  - {header: X-Edgee-Fallback-Used, type: response, description: Whether the gateway fell back to a
+      different provider or model than the one requested.}
+tracing:
+  request_id_header: null
+  session_id_header: x-edgee-session-id
+  note: 'No X-Request-Id / correlation-id header is documented. Tracing is session-scoped rather than
+    request-scoped: every `edgee launch` run gets a session ID, and the session report in the Console
+    is the unit of observability.'
+versioning:
+  scheme: uri-path
+  current: v1
+  detail: lifecycle/edgee-lifecycle.yml
+error_envelope:
+  gateway: '{"error": {"message", "type", "code", "param"}}'
+  console: '{"error": "<Status>", "message": "<detail>"}'
+  rfc9457: false
+  detail: errors/edgee-problem-types.yml
+rate_limit_signaling:
+  status_on_exhaustion: 429
+  headers_documented: [Retry-After]
+  headers_qualified: true
+  note: 'The docs say to "wait for the time specified in the Retry-After header (if present)" — a
+    conditional, not a guarantee. No X-RateLimit-* or RFC 9331 RateLimit-* headers are documented or
+    present in the OpenAPI.'
+  detail: rate-limits/edgee-rate-limits.yml
+streaming:
+  supported: true
+  mechanism: Server-Sent Events (text/event-stream)
+  enable: '"stream": true'
+  applies_to: [createChatCompletion, createMessage, createResponse]
+  caveat: Streaming on /v1/messages is only supported when the model uses the Anthropic provider
+    (error code streaming_not_supported otherwise).
+compatibility:
+  openai_chat_completions: true
+  openai_responses: true
+  anthropic_messages: true
+  model_id_form:
+    openai_endpoints: provider/model (e.g. anthropic/claude-sonnet-4.5)
+    anthropic_endpoint: model (e.g. claude-sonnet-4.5)

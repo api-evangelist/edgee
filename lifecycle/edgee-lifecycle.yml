@@ -1,0 +1,62 @@
+generated: '2026-08-17'
+method: searched
+source: https://www.edgee.ai/docs/api-reference
+versioning:
+  scheme: uri-path
+  current: v1
+  spec_version: '1.0.0'
+  spec_version_source: openapi/edgee-openapi-original.json (info.version)
+  policy_url: null
+  note: 'Every gateway path is prefixed /v1/. Edgee publishes no written versioning policy, no
+    version-negotiation header, and no date-pinned API version.'
+deprecation:
+  policy_url: null
+  sunset_header: null
+  deprecation_header: null
+  documented: false
+  note: 'No deprecation policy, no RFC 8594 Sunset/Deprecation header support, and no operation in
+    the OpenAPI carries deprecated: true. Recorded as an absence — no Deprecation pointer is wired in
+    apis.yml.'
+deprecated_operations: []
+status_page:
+  url: https://status.edgee.ai/
+  alias: https://status.edgee.cloud/
+  platform: Better Stack
+  http_status: 200
+  fetched: '2026-08-17'
+  components: [Edge network, AI Gateway US, AI Gateway EU, AI Gateway ASIA, AI Gateway AUS, Console,
+    Documentation, API]
+  feeds:
+  - {kind: rss, url: 'https://status.edgee.ai/feed.rss', http_status: 200}
+  - {kind: atom, url: 'https://status.edgee.ai/feed.atom'}
+  - {kind: json, note: 'The page advertises "Get the entire status page as JSON".'}
+  - {kind: webhook, note: Incident webhook notifications, plus email and Slack subscriptions.}
+  observed_uptime:
+    note: Values read from the public page on 2026-08-17; they move.
+    entries:
+    - {component: AI Gateway ASIA, uptime: '99.996%', incident: '4-minute outage on 2026-06-23'}
+    - {component: 'other components', uptime: '100%'}
+sla:
+  url: https://www.edgee.ai/pricing
+  published_uptime_target: null
+  support_sla: 30-minute SLA on Urgent tickets, 24/7 web and phone support
+  tier: Enterprise only
+  note: 'The only published SLA is a SUPPORT-response SLA on the Enterprise tier. No uptime/
+    availability percentage is committed anywhere public.'
+changelog:
+  url: https://www.edgee.ai/changelog
+  detail: changelog/edgee-changelog.yml
+product_lifecycle:
+  note: 'Edgee has moved products, not just versions. The company shipped edgee.cloud — an edge
+    component runtime and data-collection platform built on WebAssembly components — and now ships
+    the Edgee AI Gateway at edgee.ai. docs.edgee.cloud/llms.txt now serves the AI Gateway
+    documentation index and every link in it points at www.edgee.ai; app.edgee.cloud and
+    api.edgee.cloud no longer resolve in DNS. Legacy artifacts still published: the edgee-sdk crate
+    (1.8.3, 2025-12-16), react-edgee (1.3.1, 2025-12-04) and @edgee/mcp-server-edgee (0.2.0,
+    2025-11-11), none republished since 2025. Edgee has published no migration or sunset notice for
+    the edge-platform product.'
+  evidence:
+  - {url: 'https://docs.edgee.cloud/llms.txt', http_status: 200, finding: serves the edgee.ai AI
+      Gateway doc index}
+  - {host: api.edgee.cloud, dns: NXDOMAIN, fetched: '2026-08-17'}
+  - {host: app.edgee.cloud, dns: NXDOMAIN, fetched: '2026-08-17'}

@@ -1,0 +1,64 @@
+generated: '2026-08-17'
+method: probed
+source: live GET of the /.well-known/ discovery surface on every Edgee host
+note: 'Every /.well-known/ path returned 404 on every Edgee host. This file records a verified
+  ABSENCE — no WellKnown or SecurityTxt pointer is wired in apis.yml, because Edgee does not serve
+  any of these documents. Note the shape of the 404s: www.edgee.ai answers with a 24,666-byte HTML
+  SPA 404 page (not a document), while edgee.io / api.edgee.ai / api.edgee.app answer with a small
+  JSON 404 body, so none of these are soft-200 false positives.'
+hosts:
+- host: https://edgee.io
+  role: AI Gateway API base
+  documents:
+  - {path: /.well-known/security.txt, status: 404}
+  - {path: /.well-known/openid-configuration, status: 404}
+  - {path: /.well-known/oauth-authorization-server, status: 404}
+  - {path: /.well-known/oauth-protected-resource, status: 404}
+  - {path: /.well-known/api-catalog, status: 404}
+  - {path: /.well-known/ai-plugin.json, status: 404}
+  - {path: /.well-known/agent-card.json, status: 404}
+  - {path: /.well-known/agent.json, status: 404}
+- host: https://api.edgee.app
+  role: Console API base
+  documents:
+  - {path: /.well-known/security.txt, status: 404}
+  - {path: /.well-known/openid-configuration, status: 404}
+  - {path: /.well-known/oauth-authorization-server, status: 404}
+  - {path: /.well-known/oauth-protected-resource, status: 404}
+  - {path: /.well-known/api-catalog, status: 404}
+  - {path: /.well-known/agent-card.json, status: 404}
+  - {path: /.well-known/agent.json, status: 404}
+- host: https://api.edgee.ai
+  role: gateway alias (CNAME global.edgee.io)
+  documents:
+  - {path: /.well-known/security.txt, status: 404}
+  - {path: /.well-known/openid-configuration, status: 404}
+  - {path: /.well-known/oauth-authorization-server, status: 404}
+  - {path: /.well-known/oauth-protected-resource, status: 404}
+  - {path: /.well-known/api-catalog, status: 404}
+  - {path: /.well-known/agent-card.json, status: 404}
+  - {path: /.well-known/agent.json, status: 404}
+- host: https://www.edgee.ai
+  role: website + docs + console
+  documents:
+  - {path: /.well-known/security.txt, status: 404, body: HTML SPA 404 page}
+  - {path: /.well-known/openid-configuration, status: 404, body: HTML SPA 404 page}
+  - {path: /.well-known/oauth-authorization-server, status: 404, body: HTML SPA 404 page}
+  - {path: /.well-known/api-catalog, status: 404, body: HTML SPA 404 page}
+  - {path: /.well-known/ai-plugin.json, status: 404, body: HTML SPA 404 page}
+  - {path: /.well-known/agent-card.json, status: 404, body: HTML SPA 404 page}
+  - {path: /.well-known/agent.json, status: 404, body: HTML SPA 404 page}
+- host: https://www.edgee.cloud
+  role: legacy edge-platform site
+  documents:
+  - {path: /.well-known/security.txt, status: 404, body: HTML SPA 404 page}
+  - {path: /.well-known/api-catalog, status: 404, body: HTML SPA 404 page}
+  - {path: /.well-known/agent-card.json, status: 404, body: HTML SPA 404 page}
+  - {path: /.well-known/agent.json, status: 404, body: HTML SPA 404 page}
+summary:
+  paths_probed: 33
+  documents_found: 0
+  security_txt: false
+  api_catalog: false
+  oauth_metadata: false
+  agent_card: false

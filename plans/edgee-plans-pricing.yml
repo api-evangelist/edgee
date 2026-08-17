@@ -1,0 +1,66 @@
+generated: '2026-08-17'
+method: searched
+source: https://www.edgee.ai/pricing
+currency: USD
+plan_count: 3
+note: 'Seat-priced, not call-priced: Edgee charges per developer per month for the gateway and takes
+  a platform fee on credit top-ups, while the underlying model tokens are either billed through
+  Edgee credits or through the customer''s own provider keys (BYOK). There is no published
+  per-request or per-token rate card for the gateway itself.'
+plans:
+- name: Free
+  price: 0
+  currency: USD
+  period: month
+  unit: developer
+  included:
+  - 1 developer seat
+  - Multi-agent support (Claude Code, Codex, Copilot and others)
+  - Token compression (input and output)
+  - Personal dashboard with usage, cost and session tracking
+  limits:
+    seats: 1
+    scope: single developer only
+  overage: null
+- name: Team
+  price: 29
+  currency: USD
+  period: month
+  unit: developer
+  billing: per developer per month
+  included:
+  - Everything in Free
+  - BYOK plus a daily allowance on Edgee-hosted models
+  - Fallback and reroute models
+  - Team observability and squad management
+  - Spending cap per seat with alerts
+  - GitHub integration with per-repo and per-PR attribution
+  limits:
+    spend_cap: per seat, with alerts
+  overage:
+    platform_fee: 5%
+    applies_to: Edgee credit top-ups
+- name: Enterprise
+  price: null
+  price_model: custom
+  currency: USD
+  period: custom
+  contact_required: true
+  included:
+  - Everything in Team
+  - Private open-weight models, billed per GPU hour
+  - SSO / SAML authentication
+  - Private gateway (SaaS or on-premises)
+  - Custom data residency (EU or US)
+  - Custom privacy controls, including PII redaction
+  - 30-minute SLA on Urgent tickets, 24/7 web and phone support
+  limits:
+    tokens: unlimited on private models
+  overage:
+    model: custom pricing
+self_hosting:
+  available: true
+  source: https://www.edgee.ai/docs/self-hosting/overview
+  modes: [docker-compose, kubernetes-helm]
+  note: 'The AI Gateway can be run on the customer''s own infrastructure, connected or air-gapped
+    (headless). Pricing for self-hosted deployment is not published; it sits under Enterprise.'

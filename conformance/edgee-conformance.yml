@@ -1,0 +1,82 @@
+generated: '2026-08-17'
+method: derived
+source: openapi/edgee-openapi-original.json
+also:
+- https://www.edgee.ai/docs/api-reference
+- https://trust.edgee.ai/
+note: 'Edgee''s conformance story is unusual: its most load-bearing "standards" are two de-facto
+  vendor API shapes (OpenAI Chat Completions / Responses and Anthropic Messages) rather than
+  published specifications, and it conforms to those deliberately and completely — that compatibility
+  IS the product. Against formal web-API standards it is thin: no RFC 9457, no OAuth 2.0 on the API,
+  no RFC 9116, no RFC 8594, no RFC 9331 rate-limit headers.'
+standards:
+- id: openapi-3.0
+  conforms: true
+  evidence: 'openapi/edgee-openapi-original.json declares openapi 3.0.1 with 7 operations, all
+    tagged, all carrying unique operationIds, summaries and 2xx/4xx responses, plus 44 reusable
+    component schemas and two declared securitySchemes.'
+- id: openai-chat-completions
+  conforms: true
+  kind: de-facto vendor API
+  evidence: 'POST /v1/chat/completions and POST /v1/responses implement the OpenAI request/response
+    shapes; docs state the API is "OpenAI-compatible" and the OpenAI SDK is a documented integration.'
+- id: anthropic-messages
+  conforms: true
+  kind: de-facto vendor API
+  evidence: 'POST /v1/messages and POST /v1/messages/count_tokens implement the Anthropic Messages
+    shapes, including the x-api-key header scheme and the Anthropic-style error `type` enum.'
+- id: mcp
+  conforms: true
+  kind: Model Context Protocol
+  evidence: 'Edgee serves four session-metadata MCP tools into agent sessions (auth-gated remote
+    endpoint probed at https://api.edgee.app/mcp), publishes a first-party stdio MCP server
+    (@edgee/mcp-server-edgee, @modelcontextprotocol/sdk ^1.25.2), and operates a virtual MCP server
+    that routes between other MCP servers. See mcp/edgee-mcp.yml.'
+- id: sse
+  conforms: true
+  evidence: Streaming responses are delivered as text/event-stream on
+    /v1/chat/completions, /v1/messages and /v1/responses.
+- id: http-bearer-rfc6750
+  conforms: true
+  evidence: 'securityScheme bearerAuth — type http, scheme bearer, bearerFormat JWT; docs specify
+    Authorization: Bearer <api_key> and require HTTPS.'
+- id: rfc9457-problem-details
+  conforms: false
+  evidence: 'Errors use a custom {"error":{message,type,code,param}} envelope with content-type
+    application/json, not application/problem+json. See errors/edgee-problem-types.yml.'
+- id: oauth2
+  conforms: false
+  evidence: 'No oauth2 securityScheme in the OpenAPI and no OAuth endpoints documented for the API.
+    The CLI performs a browser-based OAuth login for console authentication
+    (edgee auth login), but no authorization server metadata is published —
+    /.well-known/oauth-authorization-server returns 404 on every host.'
+- id: oidc
+  conforms: false
+  evidence: /.well-known/openid-configuration returns 404 on every Edgee host. SSO/SAML is offered on
+    the Enterprise tier per the pricing page, but no discovery document is public.
+- id: rfc9116-security-txt
+  conforms: false
+  evidence: /.well-known/security.txt returns 404 on every Edgee host. See
+    well-known/edgee-well-known.yml.
+- id: rfc8594-sunset-header
+  conforms: false
+  evidence: No Sunset or Deprecation header support is documented and no operation is marked
+    deprecated. See lifecycle/edgee-lifecycle.yml.
+- id: rfc9331-ratelimit-headers
+  conforms: false
+  evidence: 'No RateLimit-* or X-RateLimit-* headers documented or declared; only a conditional
+    Retry-After. See rate-limits/edgee-rate-limits.yml.'
+- id: idempotency-key
+  conforms: false
+  evidence: No idempotency key or header anywhere in the docs or the spec. See
+    conventions/edgee-conventions.yml.
+- id: asyncapi
+  conforms: false
+  evidence: No event, streaming-subscription or webhook-publishing surface is documented, so there is
+    nothing for an AsyncAPI document to describe. Edgee CONSUMES an inbound Slack incoming-webhook
+    URL for alerts; it does not publish webhooks.
+compliance_program:
+  published: true
+  url: https://trust.edgee.ai/
+  certifications: [SOC 2 Type 1, SOC 2 Type 2]
+  detail: security/edgee-trust-center.yml

@@ -1,0 +1,82 @@
+# Edgee documentation
+
+> Edgee is an edge-native AI Gateway that reduces LLM costs by up to 50% through token compression and intelligent routing.
+
+## Docs
+
+- [Welcome to Edgee](https://www.edgee.ai/docs/introduction.md): The Agent Gateway for Claude Code, Codex, OpenCode, and any coding agent. Compress, Route, Observe.
+- [Why Edgee?](https://www.edgee.ai/docs/introduction/why-edgee.md): The Agent Gateway your coding agents and applications were missing.
+- [FAQ](https://www.edgee.ai/docs/introduction/faq.md): Common questions about the Edgee Agent Gateway.
+- [Quickstart for your coding agent](https://www.edgee.ai/docs/quickstart/index.md): The fastest way to get started with Edgee. Two commands to install, authenticate, and launch your coding assistant with compression.
+- [Quickstart for your app](https://www.edgee.ai/docs/quickstart/apps.md): Start using Edgee in in your application.
+- [Account Creation](https://www.edgee.ai/docs/quickstart/account-creation.md): Create a new Edgee account.
+- [Create an API Key](https://www.edgee.ai/docs/quickstart/api-key.md): Create a new API key to use Edgee services.
+- [Integrate Edgee to your stack](https://www.edgee.ai/docs/quickstart/integration.md): Learn how to integrate Edgee to your stack and start using Edgee services in your application.
+- [Token Compression V2](https://www.edgee.ai/docs/features/token-compression.md): Token compression is the surgical removal of redundancy, not summarization. Edgee treats it in two distinct layers, input and output.
+- [Edgee CLI](https://www.edgee.ai/docs/features/cli.md): The fastest way to run Claude Code, Codex, OpenCode, Cursor, and VS Code Copilot through Edgee. One command to authenticate, launch, and compress.
+- [Sessions](https://www.edgee.ai/docs/features/sessions.md): Every coding session, captured. Inspect tokens, costs, and compression — and share the report with one link.
+- [Team management](https://www.edgee.ai/docs/features/team.md): Deploy, monitor, and optimize coding agents across your entire engineering team from one place.
+- [Squads](https://www.edgee.ai/docs/features/squads.md): Apply shared AI Gateway settings and spending limits to subsets of your engineering team.
+- [Observability](https://www.edgee.ai/docs/features/observability.md): Track every request, measure every token, optimize every dollar.
+- [Debug Logs](https://www.edgee.ai/docs/features/debug.md): Inspect full request and response payloads for individual LLM calls, including compressed messages.
+- [Bring Your Own Keys (BYOK)](https://www.edgee.ai/docs/features/byok.md): Use your own provider keys for billing and provider-side controls, while keeping Edgee's routing and observability.
+- [Model & provider access](https://www.edgee.ai/docs/features/model-access.md): Control which models and which providers your organization is allowed to route to.
+- [Retry, Fallback & Reroute](https://www.edgee.ai/docs/features/retry-and-fallback.md): Automatic retry, provider fallback, and unconditional model reroute for resilient LLM routing.
+- [Routing Strategies](https://www.edgee.ai/docs/features/routing-strategies.md): Reusable, budget-driven routing policies applied to an organization, a squad, or a single coding agent.
+- [Usage limits & budgets](https://www.edgee.ai/docs/features/usage-limits.md): Cap spend per API key, per member, or per squad, over a daily, monthly, or lifetime window.
+- [Alerts & Budgets](https://www.edgee.ai/docs/features/alerts.md): Monitor token spend in real time with budget alerts, tag-based spend tracking, and instant notifications via email or Slack.
+- [Self-Hosting Overview](https://www.edgee.ai/docs/self-hosting/overview.md): Run the Edgee AI Gateway on your own infrastructure — connected or air-gapped.
+- [Docker Compose](https://www.edgee.ai/docs/self-hosting/docker-compose.md): Run the Edgee AI Gateway with Docker Compose, connected or headless.
+- [Kubernetes & Helm](https://www.edgee.ai/docs/self-hosting/kubernetes-helm.md): Install the Edgee AI Gateway on Kubernetes with the public Helm chart.
+- [Claude Code](https://www.edgee.ai/docs/integrations/claude-code.md): Use Edgee with Claude Code to cut token costs and extend sessions, with zero manual configuration.
+- [Codex](https://www.edgee.ai/docs/integrations/codex.md): Use Edgee with Codex to cut token costs and extend sessions, with zero manual configuration.
+- [OpenCode](https://www.edgee.ai/docs/integrations/opencode.md): Use Edgee with OpenCode for building AI applications directly in your terminal.
+- [Cursor](https://www.edgee.ai/docs/integrations/cursor.md): Use Edgee with Cursor to access any model through a single API key, with cost tracking and token compression.
+- [GitHub Copilot (VS Code)](https://www.edgee.ai/docs/integrations/copilot-vscode.md): Route GitHub Copilot in VS Code through Edgee to cut token costs and gain full observability, with one command.
+- [Xcode](https://www.edgee.ai/docs/integrations/xcode.md): Route Xcode's Coding Assistant through Edgee to cut token costs and gain full observability over every session.
+- [CodeBuddy](https://www.edgee.ai/docs/integrations/codebuddy.md): Route CodeBuddy through Edgee to cut token costs and gain full observability, with one command.
+- [Crush](https://www.edgee.ai/docs/integrations/crush.md): Route Charm's Crush through Edgee to cut token costs and gain full observability, with one command.
+- [Anthropic SDK](https://www.edgee.ai/docs/integrations/anthropic-sdk.md): Use Edgee with the Anthropic SDK for building AI applications with Claude models.
+- [OpenAI SDK](https://www.edgee.ai/docs/integrations/openai-sdk.md): Using Edgee with OpenAI SDK
+- [LangChain](https://www.edgee.ai/docs/integrations/langchain.md): Use Edgee with LangChain for building AI applications with chains, agents, and RAG.
+- [OpenClaw](https://www.edgee.ai/docs/integrations/openclaw.md): Use Edgee with OpenClaw to compress tokens, route requests, and observe every session.
+- [Overview](https://www.edgee.ai/docs/sdk/index.md): Choose your SDK and start using Edgee.
+- [TypeScript SDK](https://www.edgee.ai/docs/sdk/typescript/index.md): Integrate the TypeScript SDK in your application.
+- [TypeScript SDK Configuration](https://www.edgee.ai/docs/sdk/typescript/configuration.md): Learn how to configure and instantiate the Edgee TypeScript SDK.
+- [TypeScript SDK - Send Method](https://www.edgee.ai/docs/sdk/typescript/send.md): Complete guide to the send() method in the TypeScript SDK.
+- [TypeScript SDK - Stream Method](https://www.edgee.ai/docs/sdk/typescript/stream.md): Complete guide to the stream() method in the TypeScript SDK.
+- [TypeScript SDK - Tools (Function Calling)](https://www.edgee.ai/docs/sdk/typescript/tools.md): Complete guide to function calling with the TypeScript SDK.
+- [Python SDK](https://www.edgee.ai/docs/sdk/python/index.md): Integrate the Python SDK in your application.
+- [Python SDK Configuration](https://www.edgee.ai/docs/sdk/python/configuration.md): Learn how to configure and instantiate the Edgee Python SDK.
+- [Python SDK - Send Method](https://www.edgee.ai/docs/sdk/python/send.md): Complete guide to the send() method in the Python SDK.
+- [Python SDK - Stream Method](https://www.edgee.ai/docs/sdk/python/stream.md): Complete guide to the stream() method in the Python SDK.
+- [Python SDK - Tools (Function Calling)](https://www.edgee.ai/docs/sdk/python/tools.md): Complete guide to function calling with the Python SDK.
+- [Rust SDK](https://www.edgee.ai/docs/sdk/rust/index.md): Integrate the Rust SDK in your application.
+- [Rust SDK Configuration](https://www.edgee.ai/docs/sdk/rust/configuration.md): Learn how to configure and instantiate the Edgee Rust SDK.
+- [Rust SDK - Send Method](https://www.edgee.ai/docs/sdk/rust/send.md): Complete guide to the send() method in the Rust SDK.
+- [Rust SDK - Stream Method](https://www.edgee.ai/docs/sdk/rust/stream.md): Complete guide to the stream() method in the Rust SDK.
+- [Rust SDK - Tools (Function Calling)](https://www.edgee.ai/docs/sdk/rust/tools.md): Complete guide to function calling with the Rust SDK.
+- [Go SDK](https://www.edgee.ai/docs/sdk/go/index.md): Integrate the Go SDK in your application.
+- [Go SDK Configuration](https://www.edgee.ai/docs/sdk/go/configuration.md): Learn how to configure and instantiate the Edgee Go SDK.
+- [Go SDK - Send Method](https://www.edgee.ai/docs/sdk/go/send.md): Complete guide to the Send() method in the Go SDK.
+- [Go SDK - Stream Method](https://www.edgee.ai/docs/sdk/go/stream.md): Complete guide to the stream() method in the Go SDK.
+- [Go SDK - Tools (Function Calling)](https://www.edgee.ai/docs/sdk/go/tools.md): Complete guide to function calling with the Go SDK.
+- [Overview](https://www.edgee.ai/docs/api-reference/index.md): A brief introduction to the Edgee AI Gateway API.
+- [Authentication](https://www.edgee.ai/docs/api-reference/authentication.md): How to authenticate to the Edgee API
+- [Errors](https://www.edgee.ai/docs/api-reference/errors.md): How Edgee API responds when errors occur.
+- [OpenAI Chat Completion](https://www.edgee.ai/docs/api-reference/chat-completion.md): Create chat completions using the OpenAI Chat Completion API format
+- [OpenAI Responses](https://www.edgee.ai/docs/api-reference/responses.md): Create responses using the OpenAI Responses API format
+- [Anthropic Messages](https://www.edgee.ai/docs/api-reference/messages.md): Create messages using Anthropic Messages API format
+- [Models](https://www.edgee.ai/docs/api-reference/models.md): List all available models in the Edgee AI Gateway
+- [Count Tokens](https://www.edgee.ai/docs/api-reference/count-tokens.md): Estimate token count for a set of messages without making an LLM call
+- [Compress](https://www.edgee.ai/docs/api-reference/compress.md): Compress a request payload without calling any LLM provider
+- [Setup & Authentication](https://www.edgee.ai/docs/api-reference/console-api-setup.md): Getting started with the Edgee Console API - create tokens and authenticate requests
+- [Export Cost Data](https://www.edgee.ai/docs/api-reference/console-api-export-logs.md): Export AI Gateway usage and cost data
+- [Manage Gateway API Keys](https://www.edgee.ai/docs/api-reference/console-api-manage-gateway-api-keys.md): Create, list, update, and delete AI Gateway API keys
+- [BYOK Setup](https://www.edgee.ai/docs/api-reference/console-api-provider-keys.md): Create and manage custom provider keys (BYOK)
+
+## OpenAPI Specs
+
+- [openapi](https://www.edgee.ai/docs/api-reference/openapi.json)
+- [package](https://www.edgee.ai/docs/package.json)
+- [package-lock](https://www.edgee.ai/docs/package-lock.json)
