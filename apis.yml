@@ -23,6 +23,17 @@ x-enrichment:
   pass: local-v1
 tags:
 - Company
+- Artificial Intelligence
+- LLM
+- AI Gateway
+- Agents
+- Developer Tools
+- Observability
+- FinOps
+- Edge Computing
+- Cost Management
+tags_raw:
+- Company
 - AI
 - LLM
 - AI Gateway
@@ -41,6 +52,12 @@ apis:
   humanURL: https://www.edgee.ai/docs/api-reference
   baseURL: https://edgee.io
   tags:
+  - Artificial Intelligence
+  - LLM
+  - Chat Completions
+  - Token Compression
+  - Models
+  tags_raw:
   - AI
   - LLM
   - Chat Completions
@@ -63,6 +80,11 @@ apis:
   humanURL: https://www.edgee.ai/docs/api-reference/console-api-setup
   baseURL: https://api.edgee.app
   tags:
+  - Management
+  - Billing
+  - APIKeys
+  - BYOK
+  tags_raw:
   - Management
   - Billing
   - API Keys
