@@ -44,39 +44,12 @@ tags_raw:
 - Edge Computing
 - Cost Management
 apis:
-- aid: edgee-ai-gateway
-  name: Edgee AI Gateway API
-  description: 'OpenAI-compatible AI Gateway API. One API for any model and any provider: chat completions,
-    Anthropic-format messages, OpenAI Responses, a live model catalog, token counting, and a standalone
-    token-compression endpoint. Authenticated with a bearer API key (or an Anthropic-style x-api-key header).'
-  humanURL: https://www.edgee.ai/docs/api-reference
-  baseURL: https://edgee.io
-  tags:
-  - Artificial Intelligence
-  - LLM
-  - Chat Completions
-  - Token Compression
-  - Models
-  tags_raw:
-  - AI
-  - LLM
-  - Chat Completions
-  - Token Compression
-  - Models
-  properties:
-  - type: OpenAPI
-    url: openapi/edgee-openapi-original.json
-  - type: Overlay
-    url: overlays/edgee-gateway-overlay.yaml
-  - type: Documentation
-    url: https://www.edgee.ai/docs/api-reference
-  - type: Authentication
-    url: https://www.edgee.ai/docs/api-reference/authentication
 - aid: edgee-console
   name: Edgee Console API
-  description: 'Management API for an Edgee organization: export AI Gateway usage and cost data as CSV
-    or JSON, create/list/update/delete AI Gateway API keys, and configure custom BYOK provider keys.
-    Bearer-token authenticated with a Console token created in the Edgee Console.'
+  description: >-
+    Management API for an Edgee organization: export AI Gateway usage and cost data as CSV or JSON, create/list/update/delete
+    AI Gateway API keys, and configure custom BYOK provider keys. Bearer-token authenticated with a Console
+    token created in the Edgee Console.
   humanURL: https://www.edgee.ai/docs/api-reference/console-api-setup
   baseURL: https://api.edgee.app
   tags:
@@ -94,12 +67,98 @@ apis:
     url: https://www.edgee.ai/docs/api-reference/console-api-setup
   - type: Authentication
     url: https://www.edgee.ai/docs/api-reference/console-api-setup
+- aid: edgee:edgee-chat-api
+  name: Edgee Chat API
+  description: Chat completion endpoints (OpenAI format)
+  humanURL: https://www.edgee.ai/docs/api-reference
+  baseURL: https://edgee.io
+  tags:
+  - Chat
+  properties:
+  - type: OpenAPI
+    url: openapi/edgee-chat-api-openapi.yml
+  - type: Documentation
+    url: https://www.edgee.ai/docs/api-reference
+  - type: Authentication
+    url: https://www.edgee.ai/docs/api-reference/authentication
+- aid: edgee:edgee-compress-api
+  name: Edgee Compress API
+  description: Standalone token compression endpoint
+  humanURL: https://www.edgee.ai/docs/api-reference
+  baseURL: https://edgee.io
+  tags:
+  - Compress
+  properties:
+  - type: OpenAPI
+    url: openapi/edgee-compress-api-openapi.yml
+  - type: Documentation
+    url: https://www.edgee.ai/docs/api-reference
+  - type: Authentication
+    url: https://www.edgee.ai/docs/api-reference/authentication
+- aid: edgee:edgee-messages-api
+  name: Edgee Messages API
+  description: Messages endpoints (Anthropic format)
+  humanURL: https://www.edgee.ai/docs/api-reference
+  baseURL: https://edgee.io
+  tags:
+  - Messages
+  properties:
+  - type: OpenAPI
+    url: openapi/edgee-messages-api-openapi.yml
+  - type: Documentation
+    url: https://www.edgee.ai/docs/api-reference
+  - type: Authentication
+    url: https://www.edgee.ai/docs/api-reference/authentication
+- aid: edgee:edgee-models-api
+  name: Edgee Models API
+  description: Model management endpoints
+  humanURL: https://www.edgee.ai/docs/api-reference
+  baseURL: https://edgee.io
+  tags:
+  - Models
+  properties:
+  - type: OpenAPI
+    url: openapi/edgee-models-api-openapi.yml
+  - type: Documentation
+    url: https://www.edgee.ai/docs/api-reference
+  - type: Authentication
+    url: https://www.edgee.ai/docs/api-reference/authentication
+- aid: edgee:edgee-responses-api
+  name: Edgee Responses API
+  description: Responses endpoints (OpenAI Responses API format)
+  humanURL: https://www.edgee.ai/docs/api-reference
+  baseURL: https://edgee.io
+  tags:
+  - Responses
+  properties:
+  - type: OpenAPI
+    url: openapi/edgee-responses-api-openapi.yml
+  - type: Documentation
+    url: https://www.edgee.ai/docs/api-reference
+  - type: Authentication
+    url: https://www.edgee.ai/docs/api-reference/authentication
+- aid: edgee:edgee-tokens-api
+  name: Edgee Tokens API
+  description: Token estimation endpoints
+  humanURL: https://www.edgee.ai/docs/api-reference
+  baseURL: https://edgee.io
+  tags:
+  - Tokens
+  properties:
+  - type: OpenAPI
+    url: openapi/edgee-tokens-api-openapi.yml
+  - type: Documentation
+    url: https://www.edgee.ai/docs/api-reference
+  - type: Authentication
+    url: https://www.edgee.ai/docs/api-reference/authentication
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: Overlay
+  url: overlays/edgee-gateway-overlay.yaml
 - type: DomainSecurity
   url: security/edgee-domain-security.yml
 - type: Website
