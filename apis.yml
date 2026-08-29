@@ -9,6 +9,18 @@ description: 'Edgee is a French edge-native AI Gateway that sits between coding 
   VS Code Copilot through the gateway, and official TypeScript, Python, Go and Rust SDKs wrap the same
   surface. Edgee previously operated as an edge component runtime and data-collection platform at
   edgee.cloud; that documentation now redirects to the AI Gateway product at edgee.ai.'
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: true
+  label: Hosted service · you call their endpoint
+  confidence: high
+  source:
+  - openapi
+  - pricing
+  generated: '2026-08-28'
+  method: derived
 image: https://www.edgee.ai/assets/img/og/og.jpg
 url: https://raw.githubusercontent.com/api-evangelist/edgee/refs/heads/main/apis.yml
 x-type: company
