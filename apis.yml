@@ -113,6 +113,8 @@ apis:
   humanURL: https://www.edgee.ai/docs/api-reference
   baseURL: https://edgee.io
   tags:
+  - Message
+  tags_raw:
   - Messages
   properties:
   - type: OpenAPI
