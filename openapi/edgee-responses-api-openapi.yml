@@ -1,0 +1,625 @@
+openapi: 3.2.0
+info:
+  title: Edgee Responses API
+  version: 1.0.0
+  description: Edgee is an edge-native AI Gateway with private model hosting, automatic model selection, cost audits/alerts, and edge tools. This API is OpenAI-compatible, providing one API for any model and any provider.
+servers:
+- url: https://edgee.io
+  description: Edgee AI Gateway
+security:
+- bearerAuth: []
+tags:
+- name: Responses
+  description: Responses endpoints (OpenAI Responses API format)
+paths:
+  /v1/responses:
+    post:
+      operationId: createResponse
+      summary: Create response (OpenAI Responses format)
+      description: Creates a response using the OpenAI Responses API format. Compatible with OpenAI's Responses API and tools that target it (e.g. the Codex CLI). Differs from `/v1/chat/completions` in that the input is a flat array of typed items, tools use a flat structure (no nested `function` key), and the output is returned as an `output` array of typed items.
+      tags:
+      - Responses
+      parameters:
+      - name: X-Edgee-Tags
+        in: header
+        required: false
+        schema:
+          type: string
+        description: 'Comma-separated list of tags for categorizing and filtering requests in analytics and logs. Example: `production,agent,codex`'
+      - name: X-Edgee-Debug
+        in: header
+        required: false
+        schema:
+          type: boolean
+        description: Enable debug mode to include additional debugging information in the response.
+      - name: X-Edgee-Compression-Model
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - claude
+          - opencode
+          - cursor
+          - codex
+        description: Compression bundle to apply.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResponsesRequest'
+            examples:
+              basicText:
+                summary: Basic text input
+                value:
+                  model: openai/gpt-4o
+                  input: What is the capital of France?
+              withInstructions:
+                summary: Instructions and message array
+                value:
+                  model: openai/gpt-4o
+                  instructions: You are a helpful assistant that responds concisely.
+                  input:
+                  - role: user
+                    content: Summarize the water cycle in one sentence.
+              streaming:
+                summary: Streaming
+                value:
+                  model: openai/gpt-4o
+                  stream: true
+                  input: Write a short poem about the ocean.
+              withTools:
+                summary: With tools
+                value:
+                  model: openai/gpt-4o
+                  input: What is the weather in Paris?
+                  tools:
+                  - type: function
+                    name: get_weather
+                    description: Get current weather for a location
+                    parameters:
+                      type: object
+                      properties:
+                        location:
+                          type: string
+                          description: City name
+                      required:
+                      - location
+              multiTurnTools:
+                summary: Multi-turn with tool results
+                value:
+                  model: openai/gpt-4o
+                  input:
+                  - role: user
+                    content: What is the weather in Paris?
+                  - type: function_call
+                    call_id: call_abc123
+                    name: get_weather
+                    arguments: '{"location": "Paris"}'
+                  - type: function_call_output
+                    call_id: call_abc123
+                    output: '{"temperature": 22, "condition": "sunny"}'
+                  tools:
+                  - type: function
+                    name: get_weather
+                    description: Get current weather for a location
+                    parameters:
+                      type: object
+                      properties:
+                        location:
+                          type: string
+                      required:
+                      - location
+      responses:
+        '200':
+          description: Response created successfully
+          headers:
+            X-Edgee-Provider:
+              description: Name of the upstream provider actually used to fulfill the request.
+              schema:
+                type: string
+            X-Edgee-Fallback-Used:
+              description: Set to `1` when a fallback provider was used because the primary provider failed or was unavailable.
+              schema:
+                type: string
+                enum:
+                - '1'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponsesResponse'
+              example:
+                id: resp_abc123
+                object: response
+                status: completed
+                created_at: 1677652288.0
+                model: openai/gpt-4o
+                output:
+                - id: msg_1
+                  type: message
+                  status: completed
+                  role: assistant
+                  content:
+                  - type: output_text
+                    text: Paris
+                usage:
+                  input_tokens: 8
+                  output_tokens: 1
+                  total_tokens: 9
+            text/event-stream:
+              schema:
+                type: string
+                format: binary
+                description: 'Server-Sent Events stream. Each event is a JSON object prefixed with ''data: '' and followed by two newlines. Each event has a `type` field. Text responses produce: `response.created`, `response.output_item.added`, `response.content_part.added`, `response.output_text.delta`, `response.output_text.done`, `response.content_part.done`, `response.output_item.done`, `response.completed`. Tool calls additionally produce: `response.function_call_arguments.delta`, `response.function_call_arguments.done`.'
+              examples:
+                createdEvent:
+                  value: 'data: {"type":"response.created","response":{"id":"resp_abc123","object":"response","status":"in_progress","created_at":1677652288.0,"model":"openai/gpt-4o","output":[]}}
+
+
+                    '
+                outputTextDeltaEvent:
+                  value: 'data: {"type":"response.output_text.delta","item_id":"msg_1","output_index":0,"content_index":0,"delta":"Hello"}
+
+
+                    '
+                completedEvent:
+                  value: 'data: {"type":"response.completed","response":{"id":"resp_abc123","object":"response","status":"completed","created_at":1677652288.0,"model":"openai/gpt-4o","output":[{"id":"msg_1","type":"message","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Hello"}]}],"usage":{"input_tokens":8,"output_tokens":1,"total_tokens":9}}}
+
+
+                    '
+        '400':
+          description: Bad request - invalid input parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                badModelId:
+                  value:
+                    error:
+                      code: bad_model_id
+                      message: 'Invalid model ID: ''invalid-model'''
+                modelNotFound:
+                  value:
+                    error:
+                      code: model_not_found
+                      message: Model 'openai/gpt-1' not found
+        '401':
+          description: Unauthorized - missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: unauthorized
+                  message: Missing Authorization header
+        '403':
+          description: Forbidden - API key is inactive, expired, or model not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: forbidden
+                  message: API key is inactive
+        '429':
+          description: Too many requests - usage limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: usage_limit_exceeded
+                  message: 'Usage limit exceeded: 1000.00 / 1000 tokens used'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ResponsesToolChoiceFunction:
+      type: object
+      description: Forces the model to call the specified function.
+      required:
+      - type
+      - name
+      properties:
+        type:
+          type: string
+          enum:
+          - function
+        name:
+          type: string
+          description: Name of the function to call.
+    ResponsesInputItem:
+      description: A single item in the `input` array. Either a message turn, an assistant function call, or a function call output.
+      oneOf:
+      - type: object
+        title: Message
+        required:
+        - role
+        - content
+        properties:
+          role:
+            type: string
+            enum:
+            - user
+            - assistant
+            - system
+            - developer
+            description: The role of the message author.
+          content:
+            description: Message content. Either a plain string or an array of typed content parts.
+            oneOf:
+            - type: string
+            - type: array
+              items:
+                $ref: '#/components/schemas/ResponsesContentPart'
+      - type: object
+        title: Function call
+        required:
+        - type
+        - call_id
+        - name
+        - arguments
+        properties:
+          type:
+            type: string
+            enum:
+            - function_call
+          call_id:
+            type: string
+            description: Identifier linking this call to its `function_call_output`.
+            example: call_abc123
+          name:
+            type: string
+            description: Name of the function the assistant is calling.
+            example: get_weather
+          arguments:
+            type: string
+            description: Arguments passed to the function, encoded as a JSON string.
+            example: '{"location": "Paris"}'
+      - type: object
+        title: Function call output
+        required:
+        - type
+        - call_id
+        - output
+        properties:
+          type:
+            type: string
+            enum:
+            - function_call_output
+          call_id:
+            type: string
+            description: Identifier matching the `function_call` item this is responding to.
+            example: call_abc123
+          output:
+            type: string
+            description: Tool result, encoded as a string (typically JSON).
+            example: '{"temperature": 22}'
+    ToolChoiceTypedMode:
+      type: object
+      description: Typed-mode form of `tool_choice` — an object containing only a `type` field set to `auto` or `none`.
+      required:
+      - type
+      properties:
+        type:
+          type: string
+          enum:
+          - auto
+          - none
+    ResponsesUsage:
+      type: object
+      description: Token usage statistics for the response.
+      required:
+      - input_tokens
+      - output_tokens
+      - total_tokens
+      properties:
+        input_tokens:
+          type: integer
+          description: Tokens in the input.
+          minimum: 0
+        output_tokens:
+          type: integer
+          description: Tokens in the output.
+          minimum: 0
+        total_tokens:
+          type: integer
+          description: Total tokens used.
+          minimum: 0
+    ErrorResponse:
+      type: object
+      required:
+      - error
+      description: Error response. The `error` object follows OpenAI's error envelope shape; the gateway additionally populates `type` (Anthropic-style category) and `param` when applicable.
+      properties:
+        error:
+          type: object
+          required:
+          - message
+          properties:
+            message:
+              type: string
+              description: A human-readable error message.
+            type:
+              type: string
+              enum:
+              - invalid_request_error
+              - authentication_error
+              - permission_error
+              - not_found_error
+              - rate_limit_error
+              - server_error
+              - provider_error
+              description: Anthropic-style high-level error category. Always present.
+            code:
+              type:
+              - string
+              - 'null'
+              description: 'A machine-readable error code. Currently emitted values: `unauthorized`, `forbidden`, `invalid_json`, `bad_model_id`, `model_not_found`, `provider_not_supported`, `invalid_tokenizer`, `invalid_request`, `usage_limit_exceeded`, `provider_error`, `internal_error`.'
+              example: bad_model_id
+            param:
+              type:
+              - string
+              - 'null'
+              description: Name of the request parameter that caused the error, when applicable.
+    ResponsesRequest:
+      type: object
+      required:
+      - model
+      - input
+      properties:
+        model:
+          type: string
+          description: 'ID of the model to use, with provider prefix. Format: `{author_id}/{model_id}`.'
+          example: openai/gpt-4o
+        input:
+          description: The input to the model. Either a plain string (treated as a single user message) or a flat array of typed input items (messages, function calls, function call outputs).
+          oneOf:
+          - type: string
+          - type: array
+            items:
+              $ref: '#/components/schemas/ResponsesInputItem'
+        instructions:
+          type: string
+          description: System-level instruction prepended to the conversation. An alternative to including a `system` role message in the `input` array.
+        stream:
+          type: boolean
+          description: If set, the response is streamed as Server-Sent Events (SSE).
+          default: false
+        max_output_tokens:
+          type: integer
+          description: Maximum number of tokens to generate.
+          minimum: 1
+        tools:
+          type: array
+          description: Tools available to the model. Uses the Responses API flat format (no nested `function` key).
+          items:
+            $ref: '#/components/schemas/ResponsesTool'
+        tool_choice:
+          description: Controls tool selection.
+          oneOf:
+          - type: string
+            enum:
+            - auto
+            - none
+            description: Bare-string mode. `auto` lets the model decide; `none` forbids tool calls.
+          - $ref: '#/components/schemas/ToolChoiceTypedMode'
+          - $ref: '#/components/schemas/ResponsesToolChoiceFunction'
+        temperature:
+          type: number
+          description: Sampling temperature between 0 and 2. Higher values produce more random outputs.
+          minimum: 0
+          maximum: 2
+        top_p:
+          type: number
+          description: Nucleus sampling probability. Alternative to temperature.
+        tags:
+          type: array
+          items:
+            type: string
+          description: List of string tags for categorizing and filtering requests in analytics and logs. Can also be sent via the `X-Edgee-Tags` header.
+        enable_debug:
+          type: boolean
+          description: Enable debug mode to include additional information in the response.
+        edgee_tool_ids:
+          type: array
+          items:
+            type: string
+          description: List of Edgee-managed tool IDs to include automatically (e.g. `edgee_current_time`, `edgee_generate_uuid`). Each ID must be activated for your API key.
+          example:
+          - edgee_current_time
+          - edgee_generate_uuid
+        edgee_pending_id:
+          type: string
+          description: Pending operation ID when continuing a conversation after Edge Tool execution. The gateway injects stored Edge Tool results into the conversation history.
+        compression_model:
+          $ref: '#/components/schemas/CompressionModel'
+    CompressionModel:
+      type: string
+      description: Selects the compression bundle to apply to the request. Equivalent to the `X-Edgee-Compression-Model` header.
+      enum:
+      - claude
+      - opencode
+      - codex
+      - cursor
+    ResponsesOutputItem:
+      type: object
+      required:
+      - id
+      - type
+      - status
+      - role
+      - content
+      properties:
+        id:
+          type: string
+          description: Item identifier, prefixed with `msg_`.
+          example: msg_1
+        type:
+          type: string
+          enum:
+          - message
+          - function_call
+          description: '`message` for text responses, `function_call` for tool calls.'
+        status:
+          type: string
+          enum:
+          - completed
+        role:
+          type: string
+          enum:
+          - assistant
+        content:
+          type: array
+          description: Array of content parts within this output item.
+          items:
+            $ref: '#/components/schemas/ResponsesOutputContent'
+    ResponsesContentPart:
+      description: A typed content part within a message item.
+      oneOf:
+      - type: object
+        required:
+        - type
+        - text
+        properties:
+          type:
+            type: string
+            enum:
+            - input_text
+          text:
+            type: string
+      - type: object
+        required:
+        - type
+        - text
+        properties:
+          type:
+            type: string
+            enum:
+            - output_text
+          text:
+            type: string
+      - type: object
+        required:
+        - type
+        - text
+        properties:
+          type:
+            type: string
+            enum:
+            - text
+          text:
+            type: string
+    ResponsesOutputContent:
+      description: A content part within an output item.
+      oneOf:
+      - type: object
+        required:
+        - type
+        - text
+        properties:
+          type:
+            type: string
+            enum:
+            - output_text
+          text:
+            type: string
+      - type: object
+        required:
+        - type
+        - id
+        - name
+        - arguments
+        properties:
+          type:
+            type: string
+            enum:
+            - function_call
+          id:
+            type: string
+          name:
+            type: string
+          arguments:
+            type: string
+            description: Tool call arguments as a JSON string.
+    ResponsesResponse:
+      type: object
+      required:
+      - id
+      - object
+      - status
+      - created_at
+      - model
+      - output
+      - usage
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the response, prefixed with `resp_`.
+          example: resp_abc123
+        object:
+          type: string
+          enum:
+          - response
+        status:
+          type: string
+          enum:
+          - completed
+          - in_progress
+          description: '`completed` for non-streaming responses; `in_progress` is emitted on the initial `response.created` SSE event.'
+        created_at:
+          type: number
+          description: Unix timestamp (as a float) of when the response was created.
+          example: 1677652288.0
+        model:
+          type: string
+          description: The model used to generate the response.
+          example: openai/gpt-4o
+        output:
+          type: array
+          description: Array of output items produced by the model.
+          items:
+            $ref: '#/components/schemas/ResponsesOutputItem'
+        usage:
+          $ref: '#/components/schemas/ResponsesUsage'
+    ResponsesTool:
+      type: object
+      description: Tool definition in the Responses API flat format. Unlike Chat Completions, there is no nested `function` key.
+      required:
+      - type
+      - name
+      properties:
+        type:
+          type: string
+          enum:
+          - function
+        name:
+          type: string
+          description: The name of the function.
+        description:
+          type: string
+          description: Description of what the function does, used by the model to choose when to call it.
+        parameters:
+          type: object
+          description: JSON Schema object describing the function's parameters.
+          additionalProperties: true
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Bearer authentication header of the form `Bearer <token>`, where `<token>` is your API key. More info [here](/docs/api-reference/authentication)
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Anthropic-style API key authentication using the x-api-key header

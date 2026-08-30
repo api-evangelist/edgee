@@ -1,0 +1,371 @@
+openapi: 3.2.0
+info:
+  title: Edgee Messages API
+  version: 1.0.0
+  description: Edgee is an edge-native AI Gateway with private model hosting, automatic model selection, cost audits/alerts, and edge tools. This API is OpenAI-compatible, providing one API for any model and any provider.
+servers:
+- url: https://edgee.io
+  description: Edgee AI Gateway
+security:
+- bearerAuth: []
+tags:
+- name: Messages
+  description: Messages endpoints (Anthropic format)
+paths:
+  /v1/messages:
+    post:
+      operationId: createMessage
+      summary: Create message (Anthropic format)
+      description: Creates a message using Anthropic's native Messages API format. Only works with Anthropic provider.
+      tags:
+      - Messages
+      parameters:
+      - name: X-Edgee-Tags
+        in: header
+        required: false
+        schema:
+          type: string
+        description: 'Comma-separated list of tags for categorizing and filtering requests in analytics and logs. Example: `production,agent,codex`'
+      - name: X-Edgee-Debug
+        in: header
+        required: false
+        schema:
+          type: boolean
+        description: Enable debug mode to include additional debugging information in the response.
+      - name: X-Edgee-Compression-Model
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - claude
+          - opencode
+          - cursor
+          - codex
+        description: Compression bundle to apply.
+      - name: x-edgee-api-key
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Claude CLI passthrough authentication. When set, the gateway uses this key instead of `x-api-key` / `Authorization` to authenticate the request. Used by the Claude Code CLI when proxying requests through Edgee.
+      - name: x-edgee-session-id
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Claude CLI session identifier. Used to group all messages from a single CLI session in analytics.
+      security:
+      - bearerAuth: []
+      - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMessageRequest'
+      responses:
+        '200':
+          description: Message created successfully
+          headers:
+            X-Edgee-Provider:
+              description: Name of the upstream provider actually used (always `anthropic` for this endpoint).
+              schema:
+                type: string
+            X-Edgee-Fallback-Used:
+              description: Set to `1` when a fallback provider was used.
+              schema:
+                type: string
+                enum:
+                - '1'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateMessageResponse'
+            text/event-stream:
+              schema:
+                type: string
+                format: binary
+                description: Server-Sent Events stream for streaming responses
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ToolChoice:
+      type: object
+      required:
+      - type
+      discriminator:
+        propertyName: type
+      oneOf:
+      - type: object
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - auto
+            description: Model decides whether to use tools
+      - type: object
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - any
+            description: Model must use one of the provided tools
+      - type: object
+        required:
+        - type
+        - name
+        properties:
+          type:
+            type: string
+            enum:
+            - tool
+          name:
+            type: string
+            description: Name of the specific tool to use
+    ErrorResponse:
+      type: object
+      required:
+      - error
+      description: Error response. The `error` object follows OpenAI's error envelope shape; the gateway additionally populates `type` (Anthropic-style category) and `param` when applicable.
+      properties:
+        error:
+          type: object
+          required:
+          - message
+          properties:
+            message:
+              type: string
+              description: A human-readable error message.
+            type:
+              type: string
+              enum:
+              - invalid_request_error
+              - authentication_error
+              - permission_error
+              - not_found_error
+              - rate_limit_error
+              - server_error
+              - provider_error
+              description: Anthropic-style high-level error category. Always present.
+            code:
+              type:
+              - string
+              - 'null'
+              description: 'A machine-readable error code. Currently emitted values: `unauthorized`, `forbidden`, `invalid_json`, `bad_model_id`, `model_not_found`, `provider_not_supported`, `invalid_tokenizer`, `invalid_request`, `usage_limit_exceeded`, `provider_error`, `internal_error`.'
+              example: bad_model_id
+            param:
+              type:
+              - string
+              - 'null'
+              description: Name of the request parameter that caused the error, when applicable.
+    CreateMessageRequest:
+      type: object
+      required:
+      - model
+      - max_tokens
+      - messages
+      properties:
+        model:
+          type: string
+          description: The model ID to use (Anthropic format, without provider prefix)
+          example: claude-sonnet-4.5
+        max_tokens:
+          type: integer
+          description: Maximum number of tokens to generate
+          minimum: 1
+          example: 1024
+        messages:
+          type: array
+          description: Array of message objects
+          items:
+            $ref: '#/components/schemas/MessageParam'
+          minItems: 1
+        system:
+          oneOf:
+          - type: string
+            description: System prompt as a string
+          - type: array
+            description: System prompt as content blocks
+            items:
+              $ref: '#/components/schemas/ContentBlock'
+        stream:
+          type: boolean
+          description: Enable streaming responses
+          default: false
+        tools:
+          type: array
+          description: Tool definitions
+          items:
+            $ref: '#/components/schemas/AnthropicTool'
+        tool_choice:
+          $ref: '#/components/schemas/ToolChoice'
+    MessageParam:
+      type: object
+      required:
+      - role
+      - content
+      properties:
+        role:
+          type: string
+          enum:
+          - user
+          - assistant
+          description: The role of the message
+        content:
+          oneOf:
+          - type: string
+            description: Simple text content
+          - type: array
+            description: Array of content blocks
+            items:
+              $ref: '#/components/schemas/ContentBlock'
+    CreateMessageResponse:
+      type: object
+      required:
+      - id
+      - model
+      - content
+      - usage
+      properties:
+        id:
+          type: string
+          description: Unique identifier for this message
+        model:
+          type: string
+          description: The model that generated the response
+        content:
+          type: array
+          description: Array of content blocks
+          items:
+            $ref: '#/components/schemas/ContentBlock'
+        usage:
+          $ref: '#/components/schemas/AnthropicUsage'
+        stop_reason:
+          type: string
+          enum:
+          - end_turn
+          - max_tokens
+          - tool_use
+          description: Why the model stopped generating
+    AnthropicTool:
+      type: object
+      required:
+      - name
+      - input_schema
+      properties:
+        name:
+          type: string
+          description: The name of the tool
+        description:
+          type: string
+          description: Description of what the tool does
+        input_schema:
+          type: object
+          description: JSON Schema describing the tool's input parameters
+    ContentBlock:
+      type: object
+      required:
+      - type
+      discriminator:
+        propertyName: type
+      oneOf:
+      - type: object
+        required:
+        - type
+        - text
+        properties:
+          type:
+            type: string
+            enum:
+            - text
+          text:
+            type: string
+      - type: object
+        required:
+        - type
+        - id
+        - name
+        - input
+        properties:
+          type:
+            type: string
+            enum:
+            - tool_use
+          id:
+            type: string
+          name:
+            type: string
+          input:
+            type: object
+      - type: object
+        required:
+        - type
+        - tool_use_id
+        - content
+        properties:
+          type:
+            type: string
+            enum:
+            - tool_result
+          tool_use_id:
+            type: string
+          content:
+            type: string
+          is_error:
+            type: boolean
+            default: false
+    AnthropicUsage:
+      type: object
+      required:
+      - input_tokens
+      - output_tokens
+      properties:
+        input_tokens:
+          type: integer
+          description: Number of input tokens.
+          minimum: 0
+        output_tokens:
+          type: integer
+          description: Number of output tokens.
+          minimum: 0
+        cache_read_input_tokens:
+          type: integer
+          description: Number of input tokens read from the prompt cache.
+          minimum: 0
+        cache_creation_input_tokens:
+          type: integer
+          description: Number of input tokens written to the prompt cache.
+          minimum: 0
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Bearer authentication header of the form `Bearer <token>`, where `<token>` is your API key. More info [here](/docs/api-reference/authentication)
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Anthropic-style API key authentication using the x-api-key header

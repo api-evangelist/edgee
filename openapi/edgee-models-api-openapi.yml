@@ -1,0 +1,142 @@
+openapi: 3.2.0
+info:
+  title: Edgee Models API
+  version: 1.0.0
+  description: Edgee is an edge-native AI Gateway with private model hosting, automatic model selection, cost audits/alerts, and edge tools. This API is OpenAI-compatible, providing one API for any model and any provider.
+servers:
+- url: https://edgee.io
+  description: Edgee AI Gateway
+security:
+- bearerAuth: []
+tags:
+- name: Models
+  description: Model management endpoints
+paths:
+  /v1/models:
+    get:
+      operationId: listModels
+      summary: List models
+      description: Lists the currently available models, and provides basic information about each one such as the owner and availability. Returns only active models.
+      tags:
+      - Models
+      parameters:
+      - name: provider
+        in: query
+        description: Filter models by provider (optional, currently not implemented)
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of available models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsResponse'
+              example:
+                object: list
+                data:
+                - id: openai/gpt-5.2
+                  object: model
+                  created: 1677610602
+                  owned_by: openai
+                - id: anthropic/claude-opus-4-6
+                  object: model
+                  created: 1677610602
+                  owned_by: anthropic
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ModelsResponse:
+      type: object
+      required:
+      - object
+      - data
+      properties:
+        object:
+          type: string
+          enum:
+          - list
+          description: The object type, which is always `list`.
+        data:
+          type: array
+          description: The list of models.
+          items:
+            $ref: '#/components/schemas/Model'
+    ErrorResponse:
+      type: object
+      required:
+      - error
+      description: Error response. The `error` object follows OpenAI's error envelope shape; the gateway additionally populates `type` (Anthropic-style category) and `param` when applicable.
+      properties:
+        error:
+          type: object
+          required:
+          - message
+          properties:
+            message:
+              type: string
+              description: A human-readable error message.
+            type:
+              type: string
+              enum:
+              - invalid_request_error
+              - authentication_error
+              - permission_error
+              - not_found_error
+              - rate_limit_error
+              - server_error
+              - provider_error
+              description: Anthropic-style high-level error category. Always present.
+            code:
+              type:
+              - string
+              - 'null'
+              description: 'A machine-readable error code. Currently emitted values: `unauthorized`, `forbidden`, `invalid_json`, `bad_model_id`, `model_not_found`, `provider_not_supported`, `invalid_tokenizer`, `invalid_request`, `usage_limit_exceeded`, `provider_error`, `internal_error`.'
+              example: bad_model_id
+            param:
+              type:
+              - string
+              - 'null'
+              description: Name of the request parameter that caused the error, when applicable.
+    Model:
+      type: object
+      required:
+      - id
+      - object
+      - created
+      - owned_by
+      properties:
+        id:
+          type: string
+          description: 'The model identifier, which can be referenced in the API. Format: `{author_id}/{model_id}`.'
+          example: openai/gpt-5.2
+        object:
+          type: string
+          enum:
+          - model
+          description: The object type, which is always `model`.
+        created:
+          type: integer
+          description: The Unix timestamp (in seconds) when the model was created.
+          example: 1677610602
+        owned_by:
+          type: string
+          description: The organization that owns the model.
+          example: openai
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Bearer authentication header of the form `Bearer <token>`, where `<token>` is your API key. More info [here](/docs/api-reference/authentication)
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Anthropic-style API key authentication using the x-api-key header

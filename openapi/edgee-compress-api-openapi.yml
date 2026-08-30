@@ -1,0 +1,857 @@
+openapi: 3.2.0
+info:
+  title: Edgee Compress API
+  version: 1.0.0
+  description: Edgee is an edge-native AI Gateway with private model hosting, automatic model selection, cost audits/alerts, and edge tools. This API is OpenAI-compatible, providing one API for any model and any provider.
+servers:
+- url: https://edgee.io
+  description: Edgee AI Gateway
+security:
+- bearerAuth: []
+tags:
+- name: Compress
+  description: Standalone token compression endpoint
+paths:
+  /v1/compress:
+    post:
+      operationId: compress
+      summary: Compress request
+      description: 'Compresses an LLM request payload and returns it with the `messages`, `input`, `system`, and `tools` fields replaced by their compressed versions. Accepts OpenAI Chat Completions, Anthropic Messages, and OpenAI Responses API formats — the wire format is auto-detected from the request body.
+
+
+        No LLM provider is called. This is a pure pre-processing step intended for teams running their own LLM gateways who want Edgee token compression without routing requests through Edgee.'
+      tags:
+      - Compress
+      security:
+      - bearerAuth: []
+      - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompressRequest'
+            examples:
+              openaiChat:
+                summary: OpenAI Chat Completions format
+                value:
+                  model: openai/gpt-4o
+                  messages:
+                  - role: system
+                    content: You are a helpful assistant.
+                  - role: user
+                    content: What is the capital of France?
+                  - role: assistant
+                    content: Paris.
+                  - role: tool
+                    tool_call_id: call_abc
+                    content: <large tool result>
+                  tools:
+                  - type: function
+                    function:
+                      name: get_weather
+                      description: Get weather for a location
+                      parameters:
+                        type: object
+                        properties:
+                          location:
+                            type: string
+              anthropic:
+                summary: Anthropic Messages format
+                value:
+                  model: claude-sonnet-4.5
+                  max_tokens: 1024
+                  system: You are a helpful assistant.
+                  messages:
+                  - role: user
+                    content: What is the capital of France?
+                  - role: assistant
+                    content: Paris.
+              responsesApi:
+                summary: OpenAI Responses API format
+                value:
+                  model: openai/gpt-4o
+                  instructions: You are a helpful assistant.
+                  input:
+                  - role: user
+                    content: What is the capital of France?
+                  - type: function_call
+                    call_id: call_abc
+                    name: get_weather
+                    arguments: '{"location":"Paris"}'
+                  - type: function_call_output
+                    call_id: call_abc
+                    output: <large tool result>
+      responses:
+        '200':
+          description: Request compressed successfully. The response mirrors the input format with the `messages`, `input`, `system`, and `tools` fields replaced by their compressed versions. All other fields pass through unchanged. A `compression` metadata object is always appended.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompressResponse'
+              example:
+                model: openai/gpt-4o
+                messages:
+                - role: system
+                  content: You are a helpful assistant.
+                - role: user
+                  content: What is the capital of France?
+                - role: assistant
+                  content: Paris.
+                - role: tool
+                  tool_call_id: call_abc
+                  content: <trimmed>
+                tools:
+                - type: function
+                  function:
+                    name: get_weather
+                    description: Get weather for a location
+                    parameters:
+                      type: object
+                      properties:
+                        location:
+                          type: string
+                compression:
+                  technique: auto
+                  applied_strategies:
+                  - tool_result_trimming
+                  compression_rate: 0.19
+                  uncompressed_input_tokens: 1000
+                  compressed_input_tokens: 810
+                  compression_time_ms: 12
+        '400':
+          description: Bad request — malformed JSON or unrecognized request format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidJson:
+                  value:
+                    error:
+                      code: invalid_json
+                      message: 'Failed to parse JSON: ...'
+                invalidRequest:
+                  value:
+                    error:
+                      code: invalid_request
+                      message: 'Failed to convert Anthropic request: ...'
+        '401':
+          description: Unauthorized — missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: unauthorized
+                  message: Missing x-api-key or Authorization Bearer header
+        '403':
+          description: Forbidden — API key is inactive or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: forbidden
+                  message: API key is inactive
+components:
+  schemas:
+    ToolChoiceTypedMode:
+      type: object
+      description: Typed-mode form of `tool_choice` — an object containing only a `type` field set to `auto` or `none`.
+      required:
+      - type
+      properties:
+        type:
+          type: string
+          enum:
+          - auto
+          - none
+    ToolChoiceSpecific:
+      type: object
+      required:
+      - type
+      - function
+      properties:
+        type:
+          type: string
+          enum:
+          - function
+          description: The type of the tool.
+        function:
+          $ref: '#/components/schemas/ToolChoiceFunction'
+    FunctionDefinition:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          description: The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
+        description:
+          type: string
+          description: A description of what the function does, used by the model to choose when and how to call the function.
+        parameters:
+          type: object
+          description: The parameters the functions accepts, described as a JSON Schema object. See the guide for examples, and the JSON Schema reference for documentation about the format.
+          additionalProperties: true
+    ResponsesRequest:
+      type: object
+      required:
+      - model
+      - input
+      properties:
+        model:
+          type: string
+          description: 'ID of the model to use, with provider prefix. Format: `{author_id}/{model_id}`.'
+          example: openai/gpt-4o
+        input:
+          description: The input to the model. Either a plain string (treated as a single user message) or a flat array of typed input items (messages, function calls, function call outputs).
+          oneOf:
+          - type: string
+          - type: array
+            items:
+              $ref: '#/components/schemas/ResponsesInputItem'
+        instructions:
+          type: string
+          description: System-level instruction prepended to the conversation. An alternative to including a `system` role message in the `input` array.
+        stream:
+          type: boolean
+          description: If set, the response is streamed as Server-Sent Events (SSE).
+          default: false
+        max_output_tokens:
+          type: integer
+          description: Maximum number of tokens to generate.
+          minimum: 1
+        tools:
+          type: array
+          description: Tools available to the model. Uses the Responses API flat format (no nested `function` key).
+          items:
+            $ref: '#/components/schemas/ResponsesTool'
+        tool_choice:
+          description: Controls tool selection.
+          oneOf:
+          - type: string
+            enum:
+            - auto
+            - none
+            description: Bare-string mode. `auto` lets the model decide; `none` forbids tool calls.
+          - $ref: '#/components/schemas/ToolChoiceTypedMode'
+          - $ref: '#/components/schemas/ResponsesToolChoiceFunction'
+        temperature:
+          type: number
+          description: Sampling temperature between 0 and 2. Higher values produce more random outputs.
+          minimum: 0
+          maximum: 2
+        top_p:
+          type: number
+          description: Nucleus sampling probability. Alternative to temperature.
+        tags:
+          type: array
+          items:
+            type: string
+          description: List of string tags for categorizing and filtering requests in analytics and logs. Can also be sent via the `X-Edgee-Tags` header.
+        enable_debug:
+          type: boolean
+          description: Enable debug mode to include additional information in the response.
+        edgee_tool_ids:
+          type: array
+          items:
+            type: string
+          description: List of Edgee-managed tool IDs to include automatically (e.g. `edgee_current_time`, `edgee_generate_uuid`). Each ID must be activated for your API key.
+          example:
+          - edgee_current_time
+          - edgee_generate_uuid
+        edgee_pending_id:
+          type: string
+          description: Pending operation ID when continuing a conversation after Edge Tool execution. The gateway injects stored Edge Tool results into the conversation history.
+        compression_model:
+          $ref: '#/components/schemas/CompressionModel'
+    ContentBlock:
+      type: object
+      required:
+      - type
+      discriminator:
+        propertyName: type
+      oneOf:
+      - type: object
+        required:
+        - type
+        - text
+        properties:
+          type:
+            type: string
+            enum:
+            - text
+          text:
+            type: string
+      - type: object
+        required:
+        - type
+        - id
+        - name
+        - input
+        properties:
+          type:
+            type: string
+            enum:
+            - tool_use
+          id:
+            type: string
+          name:
+            type: string
+          input:
+            type: object
+      - type: object
+        required:
+        - type
+        - tool_use_id
+        - content
+        properties:
+          type:
+            type: string
+            enum:
+            - tool_result
+          tool_use_id:
+            type: string
+          content:
+            type: string
+          is_error:
+            type: boolean
+            default: false
+    ResponsesContentPart:
+      description: A typed content part within a message item.
+      oneOf:
+      - type: object
+        required:
+        - type
+        - text
+        properties:
+          type:
+            type: string
+            enum:
+            - input_text
+          text:
+            type: string
+      - type: object
+        required:
+        - type
+        - text
+        properties:
+          type:
+            type: string
+            enum:
+            - output_text
+          text:
+            type: string
+      - type: object
+        required:
+        - type
+        - text
+        properties:
+          type:
+            type: string
+            enum:
+            - text
+          text:
+            type: string
+    CompressRequest:
+      description: 'An LLM request payload to compress. Accepts any of three wire formats — the format is auto-detected from the request body: a top-level `"system"` key indicates Anthropic Messages format; a top-level `"input"` key indicates OpenAI Responses API format; otherwise, OpenAI Chat Completions format is assumed.'
+      anyOf:
+      - $ref: '#/components/schemas/ChatCompletionRequest'
+      - $ref: '#/components/schemas/CreateMessageRequest'
+      - $ref: '#/components/schemas/ResponsesRequest'
+    ToolChoice:
+      type: object
+      required:
+      - type
+      discriminator:
+        propertyName: type
+      oneOf:
+      - type: object
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - auto
+            description: Model decides whether to use tools
+      - type: object
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - any
+            description: Model must use one of the provided tools
+      - type: object
+        required:
+        - type
+        - name
+        properties:
+          type:
+            type: string
+            enum:
+            - tool
+          name:
+            type: string
+            description: Name of the specific tool to use
+    ToolCall:
+      type: object
+      required:
+      - id
+      - type
+      - function
+      properties:
+        id:
+          type: string
+          description: The ID of the tool call.
+        type:
+          type: string
+          enum:
+          - function
+          description: The type of the tool call.
+        function:
+          $ref: '#/components/schemas/FunctionCall'
+    MessageParam:
+      type: object
+      required:
+      - role
+      - content
+      properties:
+        role:
+          type: string
+          enum:
+          - user
+          - assistant
+          description: The role of the message
+        content:
+          oneOf:
+          - type: string
+            description: Simple text content
+          - type: array
+            description: Array of content blocks
+            items:
+              $ref: '#/components/schemas/ContentBlock'
+    AnthropicTool:
+      type: object
+      required:
+      - name
+      - input_schema
+      properties:
+        name:
+          type: string
+          description: The name of the tool
+        description:
+          type: string
+          description: Description of what the tool does
+        input_schema:
+          type: object
+          description: JSON Schema describing the tool's input parameters
+    CompressResponse:
+      type: object
+      description: The original request payload with compressed content fields replaced. All fields not touched by compression (`model`, `temperature`, `top_p`, `stop_sequences`, etc.) pass through unchanged. A `compression` object is always appended.
+      required:
+      - compression
+      properties:
+        compression:
+          $ref: '#/components/schemas/CompressMetadata'
+      additionalProperties: true
+    CompressionModel:
+      type: string
+      description: Selects the compression bundle to apply to the request. Equivalent to the `X-Edgee-Compression-Model` header.
+      enum:
+      - claude
+      - opencode
+      - codex
+      - cursor
+    Tool:
+      type: object
+      required:
+      - type
+      - function
+      properties:
+        type:
+          type: string
+          enum:
+          - function
+          description: The type of the tool. Currently, only `function` is supported.
+        function:
+          $ref: '#/components/schemas/FunctionDefinition'
+    ChatCompletionRequest:
+      type: object
+      required:
+      - model
+      - messages
+      properties:
+        model:
+          type: string
+          description: 'ID of the model to use. Format: `{author_id}/{model_id}` (e.g. `openai/gpt-5.2`)'
+          example: openai/gpt-5.2
+        messages:
+          type: array
+          description: A list of messages comprising the conversation so far.
+          items:
+            $ref: '#/components/schemas/Message'
+          minItems: 1
+        max_tokens:
+          type: integer
+          description: The maximum number of tokens that can be generated in the chat completion.
+          minimum: 1
+        stream:
+          type: boolean
+          description: If set, partial message deltas will be sent, as in OpenAI. Streamed chunks are sent as Server-Sent Events (SSE).
+          default: false
+        stream_options:
+          type: object
+          description: Options for streaming response.
+          properties:
+            include_usage:
+              type: boolean
+              description: If set, an additional `[DONE]` message will be sent with usage statistics when the stream is finished.
+        tools:
+          type: array
+          description: A list of tools the model may call. Currently, only `function` type is supported.
+          items:
+            $ref: '#/components/schemas/Tool'
+        tool_choice:
+          oneOf:
+          - type: string
+            enum:
+            - none
+            - auto
+            description: Bare-string mode. `none` forbids tool calls; `auto` lets the model decide.
+          - $ref: '#/components/schemas/ToolChoiceTypedMode'
+          - $ref: '#/components/schemas/ToolChoiceSpecific'
+          description: 'Controls which tool (if any) the model is allowed to call. Accepts a bare string (`none` / `auto`), a typed-mode object (`{ "type": "auto" | "none" }`), or a specific function reference.'
+        edgee_tool_ids:
+          type: array
+          items:
+            type: string
+          description: List of Edge Tool IDs to inject (e.g. edgee_current_time, edgee_generate_uuid). Each ID must be activated for your API key. When omitted or empty, only tools with hydration enabled for your org or API key are auto-injected. Invalid or non-activated IDs return 400 with invalid_edgee_tool_ids.
+          example:
+          - edgee_current_time
+          - edgee_generate_uuid
+        edgee_pending_id:
+          type: string
+          description: Pending operation ID when continuing a conversation after Edge Tool execution (e.g. when mixing client-side and Edge Tools). The gateway injects stored Edge Tool results into the message history.
+        tags:
+          type: array
+          items:
+            type: string
+          description: Optional tags to categorize and label the request. Useful for filtering and grouping requests in analytics and logs. Can also be sent via the `x-edgee-tags` header as a comma-separated string.
+        enable_debug:
+          type: boolean
+          description: When `true`, the response includes additional debug information. Equivalent to the `X-Edgee-Debug` header.
+        compression_model:
+          $ref: '#/components/schemas/CompressionModel'
+    CompressMetadata:
+      type: object
+      description: Token compression metrics appended to every `/v1/compress` response.
+      required:
+      - technique
+      - applied_strategies
+      - compression_rate
+      - uncompressed_input_tokens
+      - compressed_input_tokens
+      - compression_time_ms
+      properties:
+        technique:
+          type: string
+          enum:
+          - auto
+          - tool
+          description: '`auto` when all applicable strategies are tried; `tool` when a specific compression model was requested via the `X-Edgee-Compression-Model` header or `compression_model` body field.'
+          example: auto
+        applied_strategies:
+          type: array
+          description: Names of the compression strategies that were applied to the request.
+          items:
+            type: string
+          example:
+          - tool_result_trimming
+        compression_rate:
+          type: number
+          description: Fraction of input tokens removed (0.0–1.0). For example, `0.19` means 19% of input tokens were removed.
+          minimum: 0
+          maximum: 1
+          example: 0.19
+        uncompressed_input_tokens:
+          type: integer
+          description: Token count of the original, uncompressed input.
+          minimum: 0
+          example: 1000
+        compressed_input_tokens:
+          type: integer
+          description: Token count after compression. This is what the downstream LLM provider will be billed for.
+          minimum: 0
+          example: 810
+        compression_time_ms:
+          type: integer
+          description: Wall-clock time taken to perform compression, in milliseconds.
+          minimum: 0
+          example: 12
+        error:
+          type: string
+          description: Human-readable error message if compression partially failed. Present only when an error occurred during compression.
+        tool_stats:
+          type: object
+          description: Per-tool compression statistics. Present only when `tool_result_trimming` was applied.
+          additionalProperties: true
+    ErrorResponse:
+      type: object
+      required:
+      - error
+      description: Error response. The `error` object follows OpenAI's error envelope shape; the gateway additionally populates `type` (Anthropic-style category) and `param` when applicable.
+      properties:
+        error:
+          type: object
+          required:
+          - message
+          properties:
+            message:
+              type: string
+              description: A human-readable error message.
+            type:
+              type: string
+              enum:
+              - invalid_request_error
+              - authentication_error
+              - permission_error
+              - not_found_error
+              - rate_limit_error
+              - server_error
+              - provider_error
+              description: Anthropic-style high-level error category. Always present.
+            code:
+              type:
+              - string
+              - 'null'
+              description: 'A machine-readable error code. Currently emitted values: `unauthorized`, `forbidden`, `invalid_json`, `bad_model_id`, `model_not_found`, `provider_not_supported`, `invalid_tokenizer`, `invalid_request`, `usage_limit_exceeded`, `provider_error`, `internal_error`.'
+              example: bad_model_id
+            param:
+              type:
+              - string
+              - 'null'
+              description: Name of the request parameter that caused the error, when applicable.
+    ResponsesToolChoiceFunction:
+      type: object
+      description: Forces the model to call the specified function.
+      required:
+      - type
+      - name
+      properties:
+        type:
+          type: string
+          enum:
+          - function
+        name:
+          type: string
+          description: Name of the function to call.
+    ResponsesInputItem:
+      description: A single item in the `input` array. Either a message turn, an assistant function call, or a function call output.
+      oneOf:
+      - type: object
+        title: Message
+        required:
+        - role
+        - content
+        properties:
+          role:
+            type: string
+            enum:
+            - user
+            - assistant
+            - system
+            - developer
+            description: The role of the message author.
+          content:
+            description: Message content. Either a plain string or an array of typed content parts.
+            oneOf:
+            - type: string
+            - type: array
+              items:
+                $ref: '#/components/schemas/ResponsesContentPart'
+      - type: object
+        title: Function call
+        required:
+        - type
+        - call_id
+        - name
+        - arguments
+        properties:
+          type:
+            type: string
+            enum:
+            - function_call
+          call_id:
+            type: string
+            description: Identifier linking this call to its `function_call_output`.
+            example: call_abc123
+          name:
+            type: string
+            description: Name of the function the assistant is calling.
+            example: get_weather
+          arguments:
+            type: string
+            description: Arguments passed to the function, encoded as a JSON string.
+            example: '{"location": "Paris"}'
+      - type: object
+        title: Function call output
+        required:
+        - type
+        - call_id
+        - output
+        properties:
+          type:
+            type: string
+            enum:
+            - function_call_output
+          call_id:
+            type: string
+            description: Identifier matching the `function_call` item this is responding to.
+            example: call_abc123
+          output:
+            type: string
+            description: Tool result, encoded as a string (typically JSON).
+            example: '{"temperature": 22}'
+    Message:
+      type: object
+      required:
+      - role
+      properties:
+        role:
+          type: string
+          enum:
+          - system
+          - user
+          - assistant
+          - tool
+          - developer
+          description: 'The role of the message author. Required properties vary by role:
+
+            - `system`, `user`, `developer`: requires `content`
+
+            - `assistant`: `content` is optional (can be empty if `tool_calls` is present)
+
+            - `tool`: requires `content` and `tool_call_id`'
+        content:
+          type: string
+          description: The contents of the message. Required for all roles except `assistant` (where it can be empty if `tool_calls` is present). For `assistant` role, defaults to empty string if not provided.
+        name:
+          type: string
+          description: An optional name for the participant. Provides the model information to differentiate between participants of the same role. Used for `system`, `user`, `assistant`, and `developer` roles.
+        tool_call_id:
+          type: string
+          description: The ID of the tool call that this message is responding to. Required for `tool` role only.
+        refusal:
+          type: string
+          description: The refusal message from the model, if any. Used for `assistant` role only.
+        tool_calls:
+          type: array
+          description: The tool calls made by the assistant. Used for `assistant` role only.
+          items:
+            $ref: '#/components/schemas/ToolCall'
+        cache_control:
+          type: object
+          description: Anthropic prompt-cache control passthrough. Applied when routing to an Anthropic-backed model. Used on `system`, `user`, and `assistant` roles only.
+          additionalProperties: true
+          example:
+            type: ephemeral
+    CreateMessageRequest:
+      type: object
+      required:
+      - model
+      - max_tokens
+      - messages
+      properties:
+        model:
+          type: string
+          description: The model ID to use (Anthropic format, without provider prefix)
+          example: claude-sonnet-4.5
+        max_tokens:
+          type: integer
+          description: Maximum number of tokens to generate
+          minimum: 1
+          example: 1024
+        messages:
+          type: array
+          description: Array of message objects
+          items:
+            $ref: '#/components/schemas/MessageParam'
+          minItems: 1
+        system:
+          oneOf:
+          - type: string
+            description: System prompt as a string
+          - type: array
+            description: System prompt as content blocks
+            items:
+              $ref: '#/components/schemas/ContentBlock'
+        stream:
+          type: boolean
+          description: Enable streaming responses
+          default: false
+        tools:
+          type: array
+          description: Tool definitions
+          items:
+            $ref: '#/components/schemas/AnthropicTool'
+        tool_choice:
+          $ref: '#/components/schemas/ToolChoice'
+    FunctionCall:
+      type: object
+      required:
+      - name
+      - arguments
+      properties:
+        name:
+          type: string
+          description: The name of the function to call.
+        arguments:
+          type: string
+          description: The arguments to call the function with, as JSON.
+    ToolChoiceFunction:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          description: The name of the function to call.
+    ResponsesTool:
+      type: object
+      description: Tool definition in the Responses API flat format. Unlike Chat Completions, there is no nested `function` key.
+      required:
+      - type
+      - name
+      properties:
+        type:
+          type: string
+          enum:
+          - function
+        name:
+          type: string
+          description: The name of the function.
+        description:
+          type: string
+          description: Description of what the function does, used by the model to choose when to call it.
+        parameters:
+          type: object
+          description: JSON Schema object describing the function's parameters.
+          additionalProperties: true
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Bearer authentication header of the form `Bearer <token>`, where `<token>` is your API key. More info [here](/docs/api-reference/authentication)
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Anthropic-style API key authentication using the x-api-key header

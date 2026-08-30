@@ -1,0 +1,376 @@
+openapi: 3.2.0
+info:
+  title: Edgee Tokens API
+  version: 1.0.0
+  description: Edgee is an edge-native AI Gateway with private model hosting, automatic model selection, cost audits/alerts, and edge tools. This API is OpenAI-compatible, providing one API for any model and any provider.
+servers:
+- url: https://edgee.io
+  description: Edgee AI Gateway
+security:
+- bearerAuth: []
+tags:
+- name: Tokens
+  description: Token estimation endpoints
+paths:
+  /v1/messages/count_tokens:
+    post:
+      operationId: countTokensMessages
+      summary: Count tokens (Anthropic format)
+      description: 'Estimates the number of input tokens for a request shaped like the Anthropic [Messages API](#tag/Messages). Always forwards to the Anthropic provider''s tokenizer. Returns an `input_tokens` count compatible with `/v1/count_tokens`.
+
+
+        **Note:** `max_tokens` is accepted but ignored by this endpoint.'
+      tags:
+      - Tokens
+      security:
+      - bearerAuth: []
+      - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMessageRequest'
+            example:
+              model: claude-sonnet-4.5
+              max_tokens: 1024
+              messages:
+              - role: user
+                content: What is the capital of France?
+      responses:
+        '200':
+          description: Token count estimated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountTokensResponse'
+              example:
+                input_tokens: 14
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/count_tokens:
+    post:
+      operationId: countTokens
+      summary: Count tokens
+      description: 'Estimates the number of input tokens for a set of messages without making an LLM call. Accepts both OpenAI chat format and Anthropic Messages format, the format is auto-detected from the message structure. Useful for pre-flight cost estimation, rate-limit planning, and prompt optimization.
+
+
+        **Note:** Token counts are approximate and may differ from provider-native tokenizers (e.g. OpenAI tiktoken, Anthropic''s tokenizer).'
+      tags:
+      - Tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CountTokensRequest'
+            example:
+              model: openai/gpt-5.2
+              messages:
+              - role: system
+                content: You are a helpful assistant.
+              - role: user
+                content: What is the capital of France?
+      responses:
+        '200':
+          description: Token count estimated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountTokensResponse'
+              example:
+                input_tokens: 42
+        '400':
+          description: Bad request - invalid input parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ToolChoice:
+      type: object
+      required:
+      - type
+      discriminator:
+        propertyName: type
+      oneOf:
+      - type: object
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - auto
+            description: Model decides whether to use tools
+      - type: object
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - any
+            description: Model must use one of the provided tools
+      - type: object
+        required:
+        - type
+        - name
+        properties:
+          type:
+            type: string
+            enum:
+            - tool
+          name:
+            type: string
+            description: Name of the specific tool to use
+    ErrorResponse:
+      type: object
+      required:
+      - error
+      description: Error response. The `error` object follows OpenAI's error envelope shape; the gateway additionally populates `type` (Anthropic-style category) and `param` when applicable.
+      properties:
+        error:
+          type: object
+          required:
+          - message
+          properties:
+            message:
+              type: string
+              description: A human-readable error message.
+            type:
+              type: string
+              enum:
+              - invalid_request_error
+              - authentication_error
+              - permission_error
+              - not_found_error
+              - rate_limit_error
+              - server_error
+              - provider_error
+              description: Anthropic-style high-level error category. Always present.
+            code:
+              type:
+              - string
+              - 'null'
+              description: 'A machine-readable error code. Currently emitted values: `unauthorized`, `forbidden`, `invalid_json`, `bad_model_id`, `model_not_found`, `provider_not_supported`, `invalid_tokenizer`, `invalid_request`, `usage_limit_exceeded`, `provider_error`, `internal_error`.'
+              example: bad_model_id
+            param:
+              type:
+              - string
+              - 'null'
+              description: Name of the request parameter that caused the error, when applicable.
+    CreateMessageRequest:
+      type: object
+      required:
+      - model
+      - max_tokens
+      - messages
+      properties:
+        model:
+          type: string
+          description: The model ID to use (Anthropic format, without provider prefix)
+          example: claude-sonnet-4.5
+        max_tokens:
+          type: integer
+          description: Maximum number of tokens to generate
+          minimum: 1
+          example: 1024
+        messages:
+          type: array
+          description: Array of message objects
+          items:
+            $ref: '#/components/schemas/MessageParam'
+          minItems: 1
+        system:
+          oneOf:
+          - type: string
+            description: System prompt as a string
+          - type: array
+            description: System prompt as content blocks
+            items:
+              $ref: '#/components/schemas/ContentBlock'
+        stream:
+          type: boolean
+          description: Enable streaming responses
+          default: false
+        tools:
+          type: array
+          description: Tool definitions
+          items:
+            $ref: '#/components/schemas/AnthropicTool'
+        tool_choice:
+          $ref: '#/components/schemas/ToolChoice'
+    MessageParam:
+      type: object
+      required:
+      - role
+      - content
+      properties:
+        role:
+          type: string
+          enum:
+          - user
+          - assistant
+          description: The role of the message
+        content:
+          oneOf:
+          - type: string
+            description: Simple text content
+          - type: array
+            description: Array of content blocks
+            items:
+              $ref: '#/components/schemas/ContentBlock'
+    AnthropicTool:
+      type: object
+      required:
+      - name
+      - input_schema
+      properties:
+        name:
+          type: string
+          description: The name of the tool
+        description:
+          type: string
+          description: Description of what the tool does
+        input_schema:
+          type: object
+          description: JSON Schema describing the tool's input parameters
+    ContentBlock:
+      type: object
+      required:
+      - type
+      discriminator:
+        propertyName: type
+      oneOf:
+      - type: object
+        required:
+        - type
+        - text
+        properties:
+          type:
+            type: string
+            enum:
+            - text
+          text:
+            type: string
+      - type: object
+        required:
+        - type
+        - id
+        - name
+        - input
+        properties:
+          type:
+            type: string
+            enum:
+            - tool_use
+          id:
+            type: string
+          name:
+            type: string
+          input:
+            type: object
+      - type: object
+        required:
+        - type
+        - tool_use_id
+        - content
+        properties:
+          type:
+            type: string
+            enum:
+            - tool_result
+          tool_use_id:
+            type: string
+          content:
+            type: string
+          is_error:
+            type: boolean
+            default: false
+    CountTokensResponse:
+      type: object
+      required:
+      - input_tokens
+      properties:
+        input_tokens:
+          type: integer
+          description: Estimated number of input tokens for the provided messages. This is an approximation, counts may differ from provider-native tokenizers. Use for estimation and budgeting, not exact billing.
+          minimum: 0
+          example: 42
+    CountTokensRequest:
+      type: object
+      required:
+      - model
+      properties:
+        model:
+          type: string
+          description: 'ID of the target model. Format: `{author_id}/{model_id}`. The gateway uses this to pick the appropriate tokenizer when `tokenizer` is not provided.'
+          example: openai/gpt-5.2
+        messages:
+          type: array
+          description: Optional array of message objects to count tokens for. Accepts both OpenAI chat format (with `system`, `user`, `assistant` roles) and Anthropic Messages format; the format is auto-detected from the message structure. Defaults to an empty array.
+          items:
+            type: object
+            required:
+            - role
+            - content
+            properties:
+              role:
+                type: string
+                description: The role of the message author.
+              content:
+                description: The message content. Can be a plain string or an array of content blocks.
+                oneOf:
+                - type: string
+                - type: array
+                  items:
+                    type: object
+            additionalProperties: true
+        system:
+          description: Optional system prompt. Accepts a plain string or an array of Anthropic content blocks. Used when counting tokens for an Anthropic-style request.
+          oneOf:
+          - type: string
+          - type: array
+            items:
+              type: object
+        tokenizer:
+          type: string
+          enum:
+          - cl100k_base
+          - o200k_base
+          description: Explicit tokenizer override. When omitted, the gateway picks one based on `model`.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Bearer authentication header of the form `Bearer <token>`, where `<token>` is your API key. More info [here](/docs/api-reference/authentication)
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Anthropic-style API key authentication using the x-api-key header
