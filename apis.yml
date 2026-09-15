@@ -1,14 +1,14 @@
 aid: edgee
 name: Edgee
-description: 'Edgee is a French edge-native AI Gateway that sits between coding agents and LLM providers,
+description: Edgee is a French edge-native AI Gateway that sits between coding agents and LLM providers,
   intercepting, routing, compressing, metering and securing every request. Its OpenAI-compatible gateway
   API at edgee.io exposes chat completions, an Anthropic Messages endpoint, an OpenAI Responses endpoint,
   a model catalog of 230+ models across providers, token counting and a standalone compression endpoint,
   while a separate Console API at api.edgee.app handles organization management, gateway key management,
   BYOK provider keys and usage/cost export. A Rust CLI launches Claude Code, Codex, OpenCode, Cursor and
   VS Code Copilot through the gateway, and official TypeScript, Python, Go and Rust SDKs wrap the same
-  surface. Edgee previously operated as an edge component runtime and data-collection platform at
-  edgee.cloud; that documentation now redirects to the AI Gateway product at edgee.ai.'
+  surface. Edgee previously operated as an edge component runtime and data-collection platform at edgee.cloud;
+  that documentation now redirects to the AI Gateway product at edgee.ai.
 deliveryModel:
   model: saas
   open_source: false
@@ -71,12 +71,11 @@ tags_raw:
 - Edge Computing
 - Cost Management
 apis:
-- aid: edgee-console
+- aid: edgee:edgee-console
   name: Edgee Console API
-  description: >-
-    Management API for an Edgee organization: export AI Gateway usage and cost data as CSV or JSON, create/list/update/delete
-    AI Gateway API keys, and configure custom BYOK provider keys. Bearer-token authenticated with a Console
-    token created in the Edgee Console.
+  description: 'Management API for an Edgee organization: export AI Gateway usage and cost data as CSV
+    or JSON, create/list/update/delete AI Gateway API keys, and configure custom BYOK provider keys. Bearer-token
+    authenticated with a Console token created in the Edgee Console.'
   humanURL: https://www.edgee.ai/docs/api-reference/console-api-setup
   baseURL: https://api.edgee.app
   tags:
