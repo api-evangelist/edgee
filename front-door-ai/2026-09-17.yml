@@ -1,0 +1,32 @@
+# Front Door AI Index — edgee — 2026-09-17
+# AI vocabulary counted on the provider's root page. Generated; do not edit.
+# `score` is null unless ownership is `own` — see front_door_ai.py.
+front_door_ai:
+  slug: edgee
+  lexicon_version: '1.0'
+  probed_at: '2026-09-17'
+  host: www.edgee.ai
+  final_host: www.edgee.ai
+  ownership: own
+  owner: edgee
+  shares_host_with: null
+  inherited_from: null
+  verdict: scored
+  score: 11
+  host_score: 11
+  density: 16.64
+  words: 661
+  tiers:
+    agentic: 4
+    core: 4
+    model: 3
+  ambiguous: 17
+  top_terms:
+    agent: 13
+    AI: 3
+    Claude: 3
+    copilot: 3
+    intelligence: 3
+    LLMs: 1
+    prompts: 1
+    smart: 1

@@ -184,77 +184,21 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    ToolCall:
+    FunctionDefinition:
       type: object
       required:
-      - id
-      - type
-      - function
+      - name
       properties:
-        id:
-          type: string
-          description: The ID of the tool call.
-        type:
-          type: string
-          enum:
-          - function
-          description: The type of the tool call.
-        function:
-          $ref: '#/components/schemas/FunctionCall'
-    ToolChoiceTypedMode:
-      type: object
-      description: Typed-mode form of `tool_choice` — an object containing only a `type` field set to `auto` or `none`.
-      required:
-      - type
-      properties:
-        type:
-          type: string
-          enum:
-          - auto
-          - none
-    Message:
-      type: object
-      required:
-      - role
-      properties:
-        role:
-          type: string
-          enum:
-          - system
-          - user
-          - assistant
-          - tool
-          - developer
-          description: 'The role of the message author. Required properties vary by role:
-
-            - `system`, `user`, `developer`: requires `content`
-
-            - `assistant`: `content` is optional (can be empty if `tool_calls` is present)
-
-            - `tool`: requires `content` and `tool_call_id`'
-        content:
-          type: string
-          description: The contents of the message. Required for all roles except `assistant` (where it can be empty if `tool_calls` is present). For `assistant` role, defaults to empty string if not provided.
         name:
           type: string
-          description: An optional name for the participant. Provides the model information to differentiate between participants of the same role. Used for `system`, `user`, `assistant`, and `developer` roles.
-        tool_call_id:
+          description: The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
+        description:
           type: string
-          description: The ID of the tool call that this message is responding to. Required for `tool` role only.
-        refusal:
-          type: string
-          description: The refusal message from the model, if any. Used for `assistant` role only.
-        tool_calls:
-          type: array
-          description: The tool calls made by the assistant. Used for `assistant` role only.
-          items:
-            $ref: '#/components/schemas/ToolCall'
-        cache_control:
+          description: A description of what the function does, used by the model to choose when and how to call the function.
+        parameters:
           type: object
-          description: Anthropic prompt-cache control passthrough. Applied when routing to an Anthropic-backed model. Used on `system`, `user`, and `assistant` roles only.
+          description: The parameters the functions accepts, described as a JSON Schema object. See the guide for examples, and the JSON Schema reference for documentation about the format.
           additionalProperties: true
-          example:
-            type: ephemeral
     ErrorResponse:
       type: object
       required:
@@ -291,18 +235,6 @@ components:
               - string
               - 'null'
               description: Name of the request parameter that caused the error, when applicable.
-    InputTokenDetails:
-      type: object
-      description: Additional details about input tokens.
-      properties:
-        cached_tokens:
-          type: integer
-          description: Number of cached tokens read from the prompt cache.
-          minimum: 0
-        cache_creation_tokens:
-          type: integer
-          description: Number of tokens written to the prompt cache (Anthropic-style cache creation).
-          minimum: 0
     ToolChoiceSpecific:
       type: object
       required:
@@ -316,58 +248,6 @@ components:
           description: The type of the tool.
         function:
           $ref: '#/components/schemas/ToolChoiceFunction'
-    Usage:
-      type: object
-      description: Usage statistics for the completion. In streaming responses, this is only present in the final chunk when `stream_options.include_usage` is true.
-      required:
-      - prompt_tokens
-      - completion_tokens
-      - total_tokens
-      - input_tokens_details
-      - output_tokens_details
-      properties:
-        prompt_tokens:
-          type: integer
-          description: Number of tokens in the prompt.
-          minimum: 0
-        completion_tokens:
-          type: integer
-          description: Number of tokens in the generated completion.
-          minimum: 0
-        total_tokens:
-          type: integer
-          description: Total number of tokens used in the request (prompt + completion).
-          minimum: 0
-        input_tokens_details:
-          $ref: '#/components/schemas/InputTokenDetails'
-        output_tokens_details:
-          $ref: '#/components/schemas/OutputTokenDetails'
-    EdgeeToolExecuted:
-      type: object
-      description: Summary of an Edge Tool that was executed inline by the gateway.
-      required:
-      - name
-      - success
-      properties:
-        name:
-          type: string
-          description: Edge Tool identifier (e.g. `edgee_current_time`).
-          example: edgee_current_time
-        success:
-          type: boolean
-          description: Whether the tool returned successfully.
-    FunctionCall:
-      type: object
-      required:
-      - name
-      - arguments
-      properties:
-        name:
-          type: string
-          description: The name of the function to call.
-        arguments:
-          type: string
-          description: The arguments to call the function with, as JSON.
     CompressionInfo:
       type: object
       description: Token compression metrics. Present in the response when token compression was applied to the request. The `usage.prompt_tokens` field reflects the compressed token count actually billed by the provider.
@@ -398,21 +278,6 @@ components:
           description: Time taken to perform compression, in milliseconds.
           minimum: 0
           example: 12
-    FunctionDefinition:
-      type: object
-      required:
-      - name
-      properties:
-        name:
-          type: string
-          description: The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
-        description:
-          type: string
-          description: A description of what the function does, used by the model to choose when and how to call the function.
-        parameters:
-          type: object
-          description: The parameters the functions accepts, described as a JSON Schema object. See the guide for examples, and the JSON Schema reference for documentation about the format.
-          additionalProperties: true
     ChatCompletionResponse:
       type: object
       required:
@@ -457,35 +322,23 @@ components:
           description: List of Edge Tools the gateway executed inline before returning. Empty or absent when no Edge Tools ran.
           items:
             $ref: '#/components/schemas/EdgeeToolExecuted'
-    CompressionModel:
-      type: string
-      description: Selects the compression bundle to apply to the request. Equivalent to the `X-Edgee-Compression-Model` header.
-      enum:
-      - claude
-      - opencode
-      - codex
-      - cursor
-    ToolChoiceFunction:
+    ToolCall:
       type: object
       required:
-      - name
-      properties:
-        name:
-          type: string
-          description: The name of the function to call.
-    Tool:
-      type: object
-      required:
+      - id
       - type
       - function
       properties:
+        id:
+          type: string
+          description: The ID of the tool call.
         type:
           type: string
           enum:
           - function
-          description: The type of the tool. Currently, only `function` is supported.
+          description: The type of the tool call.
         function:
-          $ref: '#/components/schemas/FunctionDefinition'
+          $ref: '#/components/schemas/FunctionCall'
     ChatCompletionRequest:
       type: object
       required:
@@ -553,14 +406,89 @@ components:
           description: When `true`, the response includes additional debug information. Equivalent to the `X-Edgee-Debug` header.
         compression_model:
           $ref: '#/components/schemas/CompressionModel'
-    OutputTokenDetails:
+    Message:
       type: object
-      description: Additional details about output tokens.
+      required:
+      - role
       properties:
-        reasoning_tokens:
+        role:
+          type: string
+          enum:
+          - system
+          - user
+          - assistant
+          - tool
+          - developer
+          description: 'The role of the message author. Required properties vary by role:
+
+            - `system`, `user`, `developer`: requires `content`
+
+            - `assistant`: `content` is optional (can be empty if `tool_calls` is present)
+
+            - `tool`: requires `content` and `tool_call_id`'
+        content:
+          type: string
+          description: The contents of the message. Required for all roles except `assistant` (where it can be empty if `tool_calls` is present). For `assistant` role, defaults to empty string if not provided.
+        name:
+          type: string
+          description: An optional name for the participant. Provides the model information to differentiate between participants of the same role. Used for `system`, `user`, `assistant`, and `developer` roles.
+        tool_call_id:
+          type: string
+          description: The ID of the tool call that this message is responding to. Required for `tool` role only.
+        refusal:
+          type: string
+          description: The refusal message from the model, if any. Used for `assistant` role only.
+        tool_calls:
+          type: array
+          description: The tool calls made by the assistant. Used for `assistant` role only.
+          items:
+            $ref: '#/components/schemas/ToolCall'
+        cache_control:
+          type: object
+          description: Anthropic prompt-cache control passthrough. Applied when routing to an Anthropic-backed model. Used on `system`, `user`, and `assistant` roles only.
+          additionalProperties: true
+          example:
+            type: ephemeral
+    EdgeeToolExecuted:
+      type: object
+      description: Summary of an Edge Tool that was executed inline by the gateway.
+      required:
+      - name
+      - success
+      properties:
+        name:
+          type: string
+          description: Edge Tool identifier (e.g. `edgee_current_time`).
+          example: edgee_current_time
+        success:
+          type: boolean
+          description: Whether the tool returned successfully.
+    Usage:
+      type: object
+      description: Usage statistics for the completion. In streaming responses, this is only present in the final chunk when `stream_options.include_usage` is true.
+      required:
+      - prompt_tokens
+      - completion_tokens
+      - total_tokens
+      - input_tokens_details
+      - output_tokens_details
+      properties:
+        prompt_tokens:
           type: integer
-          description: Number of reasoning tokens in the output.
+          description: Number of tokens in the prompt.
           minimum: 0
+        completion_tokens:
+          type: integer
+          description: Number of tokens in the generated completion.
+          minimum: 0
+        total_tokens:
+          type: integer
+          description: Total number of tokens used in the request (prompt + completion).
+          minimum: 0
+        input_tokens_details:
+          $ref: '#/components/schemas/InputTokenDetails'
+        output_tokens_details:
+          $ref: '#/components/schemas/OutputTokenDetails'
     ChatCompletionChoice:
       type: object
       required:
@@ -581,6 +509,78 @@ components:
           - content_filter
           - tool_calls
           description: The reason the model stopped generating tokens. This will be `stop` if the model hit a natural stop point or a provided stop sequence, `length` if the maximum number of tokens specified in the request was reached, `content_filter` if content was omitted due to a flag from our content filters, or `tool_calls` if the model called a tool.
+    ToolChoiceFunction:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          description: The name of the function to call.
+    CompressionModel:
+      type: string
+      description: Selects the compression bundle to apply to the request. Equivalent to the `X-Edgee-Compression-Model` header.
+      enum:
+      - claude
+      - opencode
+      - codex
+      - cursor
+    FunctionCall:
+      type: object
+      required:
+      - name
+      - arguments
+      properties:
+        name:
+          type: string
+          description: The name of the function to call.
+        arguments:
+          type: string
+          description: The arguments to call the function with, as JSON.
+    OutputTokenDetails:
+      type: object
+      description: Additional details about output tokens.
+      properties:
+        reasoning_tokens:
+          type: integer
+          description: Number of reasoning tokens in the output.
+          minimum: 0
+    InputTokenDetails:
+      type: object
+      description: Additional details about input tokens.
+      properties:
+        cached_tokens:
+          type: integer
+          description: Number of cached tokens read from the prompt cache.
+          minimum: 0
+        cache_creation_tokens:
+          type: integer
+          description: Number of tokens written to the prompt cache (Anthropic-style cache creation).
+          minimum: 0
+    Tool:
+      type: object
+      required:
+      - type
+      - function
+      properties:
+        type:
+          type: string
+          enum:
+          - function
+          description: The type of the tool. Currently, only `function` is supported.
+        function:
+          $ref: '#/components/schemas/FunctionDefinition'
+    ToolChoiceTypedMode:
+      type: object
+      description: Typed-mode form of `tool_choice` — an object containing only a `type` field set to `auto` or `none`.
+      required:
+      - type
+      properties:
+        type:
+          type: string
+          enum:
+          - auto
+          - none
   securitySchemes:
     bearerAuth:
       type: http

@@ -52,22 +52,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    ModelsResponse:
-      type: object
-      required:
-      - object
-      - data
-      properties:
-        object:
-          type: string
-          enum:
-          - list
-          description: The object type, which is always `list`.
-        data:
-          type: array
-          description: The list of models.
-          items:
-            $ref: '#/components/schemas/Model'
     ErrorResponse:
       type: object
       required:
@@ -104,6 +88,22 @@ components:
               - string
               - 'null'
               description: Name of the request parameter that caused the error, when applicable.
+    ModelsResponse:
+      type: object
+      required:
+      - object
+      - data
+      properties:
+        object:
+          type: string
+          enum:
+          - list
+          description: The object type, which is always `list`.
+        data:
+          type: array
+          description: The list of models.
+          items:
+            $ref: '#/components/schemas/Model'
     Model:
       type: object
       required:
