@@ -107,6 +107,132 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
+    CreateMessageResponse:
+      type: object
+      required:
+      - id
+      - model
+      - content
+      - usage
+      properties:
+        id:
+          type: string
+          description: Unique identifier for this message
+        model:
+          type: string
+          description: The model that generated the response
+        content:
+          type: array
+          description: Array of content blocks
+          items:
+            $ref: '#/components/schemas/ContentBlock'
+        usage:
+          $ref: '#/components/schemas/AnthropicUsage'
+        stop_reason:
+          type: string
+          enum:
+          - end_turn
+          - max_tokens
+          - tool_use
+          description: Why the model stopped generating
+    AnthropicUsage:
+      type: object
+      required:
+      - input_tokens
+      - output_tokens
+      properties:
+        input_tokens:
+          type: integer
+          description: Number of input tokens.
+          minimum: 0
+        output_tokens:
+          type: integer
+          description: Number of output tokens.
+          minimum: 0
+        cache_read_input_tokens:
+          type: integer
+          description: Number of input tokens read from the prompt cache.
+          minimum: 0
+        cache_creation_input_tokens:
+          type: integer
+          description: Number of input tokens written to the prompt cache.
+          minimum: 0
+    CreateMessageRequest:
+      type: object
+      required:
+      - model
+      - max_tokens
+      - messages
+      properties:
+        model:
+          type: string
+          description: The model ID to use (Anthropic format, without provider prefix)
+          example: claude-sonnet-4.5
+        max_tokens:
+          type: integer
+          description: Maximum number of tokens to generate
+          minimum: 1
+          example: 1024
+        messages:
+          type: array
+          description: Array of message objects
+          items:
+            $ref: '#/components/schemas/MessageParam'
+          minItems: 1
+        system:
+          oneOf:
+          - type: string
+            description: System prompt as a string
+          - type: array
+            description: System prompt as content blocks
+            items:
+              $ref: '#/components/schemas/ContentBlock'
+        stream:
+          type: boolean
+          description: Enable streaming responses
+          default: false
+        tools:
+          type: array
+          description: Tool definitions
+          items:
+            $ref: '#/components/schemas/AnthropicTool'
+        tool_choice:
+          $ref: '#/components/schemas/ToolChoice'
+    MessageParam:
+      type: object
+      required:
+      - role
+      - content
+      properties:
+        role:
+          type: string
+          enum:
+          - user
+          - assistant
+          description: The role of the message
+        content:
+          oneOf:
+          - type: string
+            description: Simple text content
+          - type: array
+            description: Array of content blocks
+            items:
+              $ref: '#/components/schemas/ContentBlock'
+    AnthropicTool:
+      type: object
+      required:
+      - name
+      - input_schema
+      properties:
+        name:
+          type: string
+          description: The name of the tool
+        description:
+          type: string
+          description: Description of what the tool does
+        input_schema:
+          type: object
+          description: JSON Schema describing the tool's input parameters
     ErrorResponse:
       type: object
       required:
@@ -143,26 +269,6 @@ components:
               - string
               - 'null'
               description: Name of the request parameter that caused the error, when applicable.
-    MessageParam:
-      type: object
-      required:
-      - role
-      - content
-      properties:
-        role:
-          type: string
-          enum:
-          - user
-          - assistant
-          description: The role of the message
-        content:
-          oneOf:
-          - type: string
-            description: Simple text content
-          - type: array
-            description: Array of content blocks
-            items:
-              $ref: '#/components/schemas/ContentBlock'
     ContentBlock:
       type: object
       required:
@@ -215,34 +321,6 @@ components:
           is_error:
             type: boolean
             default: false
-    CreateMessageResponse:
-      type: object
-      required:
-      - id
-      - model
-      - content
-      - usage
-      properties:
-        id:
-          type: string
-          description: Unique identifier for this message
-        model:
-          type: string
-          description: The model that generated the response
-        content:
-          type: array
-          description: Array of content blocks
-          items:
-            $ref: '#/components/schemas/ContentBlock'
-        usage:
-          $ref: '#/components/schemas/AnthropicUsage'
-        stop_reason:
-          type: string
-          enum:
-          - end_turn
-          - max_tokens
-          - tool_use
-          description: Why the model stopped generating
     ToolChoice:
       type: object
       required:
@@ -280,84 +358,6 @@ components:
           name:
             type: string
             description: Name of the specific tool to use
-    AnthropicUsage:
-      type: object
-      required:
-      - input_tokens
-      - output_tokens
-      properties:
-        input_tokens:
-          type: integer
-          description: Number of input tokens.
-          minimum: 0
-        output_tokens:
-          type: integer
-          description: Number of output tokens.
-          minimum: 0
-        cache_read_input_tokens:
-          type: integer
-          description: Number of input tokens read from the prompt cache.
-          minimum: 0
-        cache_creation_input_tokens:
-          type: integer
-          description: Number of input tokens written to the prompt cache.
-          minimum: 0
-    AnthropicTool:
-      type: object
-      required:
-      - name
-      - input_schema
-      properties:
-        name:
-          type: string
-          description: The name of the tool
-        description:
-          type: string
-          description: Description of what the tool does
-        input_schema:
-          type: object
-          description: JSON Schema describing the tool's input parameters
-    CreateMessageRequest:
-      type: object
-      required:
-      - model
-      - max_tokens
-      - messages
-      properties:
-        model:
-          type: string
-          description: The model ID to use (Anthropic format, without provider prefix)
-          example: claude-sonnet-4.5
-        max_tokens:
-          type: integer
-          description: Maximum number of tokens to generate
-          minimum: 1
-          example: 1024
-        messages:
-          type: array
-          description: Array of message objects
-          items:
-            $ref: '#/components/schemas/MessageParam'
-          minItems: 1
-        system:
-          oneOf:
-          - type: string
-            description: System prompt as a string
-          - type: array
-            description: System prompt as content blocks
-            items:
-              $ref: '#/components/schemas/ContentBlock'
-        stream:
-          type: boolean
-          description: Enable streaming responses
-          default: false
-        tools:
-          type: array
-          description: Tool definitions
-          items:
-            $ref: '#/components/schemas/AnthropicTool'
-        tool_choice:
-          $ref: '#/components/schemas/ToolChoice'
   securitySchemes:
     bearerAuth:
       type: http

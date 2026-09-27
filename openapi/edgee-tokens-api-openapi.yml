@@ -110,6 +110,134 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
+    CountTokensRequest:
+      type: object
+      required:
+      - model
+      properties:
+        model:
+          type: string
+          description: 'ID of the target model. Format: `{author_id}/{model_id}`. The gateway uses this to pick the appropriate tokenizer when `tokenizer` is not provided.'
+          example: openai/gpt-5.2
+        messages:
+          type: array
+          description: Optional array of message objects to count tokens for. Accepts both OpenAI chat format (with `system`, `user`, `assistant` roles) and Anthropic Messages format; the format is auto-detected from the message structure. Defaults to an empty array.
+          items:
+            type: object
+            required:
+            - role
+            - content
+            properties:
+              role:
+                type: string
+                description: The role of the message author.
+              content:
+                description: The message content. Can be a plain string or an array of content blocks.
+                oneOf:
+                - type: string
+                - type: array
+                  items:
+                    type: object
+            additionalProperties: true
+        system:
+          description: Optional system prompt. Accepts a plain string or an array of Anthropic content blocks. Used when counting tokens for an Anthropic-style request.
+          oneOf:
+          - type: string
+          - type: array
+            items:
+              type: object
+        tokenizer:
+          type: string
+          enum:
+          - cl100k_base
+          - o200k_base
+          description: Explicit tokenizer override. When omitted, the gateway picks one based on `model`.
+    CreateMessageRequest:
+      type: object
+      required:
+      - model
+      - max_tokens
+      - messages
+      properties:
+        model:
+          type: string
+          description: The model ID to use (Anthropic format, without provider prefix)
+          example: claude-sonnet-4.5
+        max_tokens:
+          type: integer
+          description: Maximum number of tokens to generate
+          minimum: 1
+          example: 1024
+        messages:
+          type: array
+          description: Array of message objects
+          items:
+            $ref: '#/components/schemas/MessageParam'
+          minItems: 1
+        system:
+          oneOf:
+          - type: string
+            description: System prompt as a string
+          - type: array
+            description: System prompt as content blocks
+            items:
+              $ref: '#/components/schemas/ContentBlock'
+        stream:
+          type: boolean
+          description: Enable streaming responses
+          default: false
+        tools:
+          type: array
+          description: Tool definitions
+          items:
+            $ref: '#/components/schemas/AnthropicTool'
+        tool_choice:
+          $ref: '#/components/schemas/ToolChoice'
+    CountTokensResponse:
+      type: object
+      required:
+      - input_tokens
+      properties:
+        input_tokens:
+          type: integer
+          description: Estimated number of input tokens for the provided messages. This is an approximation, counts may differ from provider-native tokenizers. Use for estimation and budgeting, not exact billing.
+          minimum: 0
+          example: 42
+    MessageParam:
+      type: object
+      required:
+      - role
+      - content
+      properties:
+        role:
+          type: string
+          enum:
+          - user
+          - assistant
+          description: The role of the message
+        content:
+          oneOf:
+          - type: string
+            description: Simple text content
+          - type: array
+            description: Array of content blocks
+            items:
+              $ref: '#/components/schemas/ContentBlock'
+    AnthropicTool:
+      type: object
+      required:
+      - name
+      - input_schema
+      properties:
+        name:
+          type: string
+          description: The name of the tool
+        description:
+          type: string
+          description: Description of what the tool does
+        input_schema:
+          type: object
+          description: JSON Schema describing the tool's input parameters
     ErrorResponse:
       type: object
       required:
@@ -146,26 +274,6 @@ components:
               - string
               - 'null'
               description: Name of the request parameter that caused the error, when applicable.
-    MessageParam:
-      type: object
-      required:
-      - role
-      - content
-      properties:
-        role:
-          type: string
-          enum:
-          - user
-          - assistant
-          description: The role of the message
-        content:
-          oneOf:
-          - type: string
-            description: Simple text content
-          - type: array
-            description: Array of content blocks
-            items:
-              $ref: '#/components/schemas/ContentBlock'
     ContentBlock:
       type: object
       required:
@@ -218,58 +326,6 @@ components:
           is_error:
             type: boolean
             default: false
-    CountTokensRequest:
-      type: object
-      required:
-      - model
-      properties:
-        model:
-          type: string
-          description: 'ID of the target model. Format: `{author_id}/{model_id}`. The gateway uses this to pick the appropriate tokenizer when `tokenizer` is not provided.'
-          example: openai/gpt-5.2
-        messages:
-          type: array
-          description: Optional array of message objects to count tokens for. Accepts both OpenAI chat format (with `system`, `user`, `assistant` roles) and Anthropic Messages format; the format is auto-detected from the message structure. Defaults to an empty array.
-          items:
-            type: object
-            required:
-            - role
-            - content
-            properties:
-              role:
-                type: string
-                description: The role of the message author.
-              content:
-                description: The message content. Can be a plain string or an array of content blocks.
-                oneOf:
-                - type: string
-                - type: array
-                  items:
-                    type: object
-            additionalProperties: true
-        system:
-          description: Optional system prompt. Accepts a plain string or an array of Anthropic content blocks. Used when counting tokens for an Anthropic-style request.
-          oneOf:
-          - type: string
-          - type: array
-            items:
-              type: object
-        tokenizer:
-          type: string
-          enum:
-          - cl100k_base
-          - o200k_base
-          description: Explicit tokenizer override. When omitted, the gateway picks one based on `model`.
-    CountTokensResponse:
-      type: object
-      required:
-      - input_tokens
-      properties:
-        input_tokens:
-          type: integer
-          description: Estimated number of input tokens for the provided messages. This is an approximation, counts may differ from provider-native tokenizers. Use for estimation and budgeting, not exact billing.
-          minimum: 0
-          example: 42
     ToolChoice:
       type: object
       required:
@@ -307,62 +363,6 @@ components:
           name:
             type: string
             description: Name of the specific tool to use
-    AnthropicTool:
-      type: object
-      required:
-      - name
-      - input_schema
-      properties:
-        name:
-          type: string
-          description: The name of the tool
-        description:
-          type: string
-          description: Description of what the tool does
-        input_schema:
-          type: object
-          description: JSON Schema describing the tool's input parameters
-    CreateMessageRequest:
-      type: object
-      required:
-      - model
-      - max_tokens
-      - messages
-      properties:
-        model:
-          type: string
-          description: The model ID to use (Anthropic format, without provider prefix)
-          example: claude-sonnet-4.5
-        max_tokens:
-          type: integer
-          description: Maximum number of tokens to generate
-          minimum: 1
-          example: 1024
-        messages:
-          type: array
-          description: Array of message objects
-          items:
-            $ref: '#/components/schemas/MessageParam'
-          minItems: 1
-        system:
-          oneOf:
-          - type: string
-            description: System prompt as a string
-          - type: array
-            description: System prompt as content blocks
-            items:
-              $ref: '#/components/schemas/ContentBlock'
-        stream:
-          type: boolean
-          description: Enable streaming responses
-          default: false
-        tools:
-          type: array
-          description: Tool definitions
-          items:
-            $ref: '#/components/schemas/AnthropicTool'
-        tool_choice:
-          $ref: '#/components/schemas/ToolChoice'
   securitySchemes:
     bearerAuth:
       type: http
