@@ -43,6 +43,9 @@ x-source: serena-portfolio
 specificationVersion: '0.23'
 created: '2026-08-17'
 modified: '2026-08-17'
+x-docs-platform: mintlify
+x-docs-platform-confidence: medium
+x-docs-platform-checked: 2026-10-03
 x-enrichment:
   date: '2026-08-17'
   status: enriched
@@ -185,6 +188,9 @@ maintainers:
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: CapabilityMap
+  url: capabilities/edgee-capability-edges.yml
+  name: Edgee Business Capability Map
 - type: Overlay
   url: overlays/edgee-gateway-overlay.yaml
 - type: DomainSecurity
