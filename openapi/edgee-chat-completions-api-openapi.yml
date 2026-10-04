@@ -9,7 +9,7 @@ servers:
 security:
 - bearerAuth: []
 tags:
-- name: Chat
+- name: Chat Completions
   description: Chat completion endpoints (OpenAI format)
 paths:
   /v1/chat/completions:
@@ -18,7 +18,7 @@ paths:
       summary: Create chat completion
       description: Creates a completion for the chat message. Supports both streaming and non-streaming responses. The API is OpenAI-compatible and works with any model and provider.
       tags:
-      - Chat
+      - Chat Completions
       parameters:
       - name: X-Edgee-Tags
         in: header
@@ -184,222 +184,18 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    ErrorResponse:
-      type: object
-      required:
-      - error
-      description: Error response. The `error` object follows OpenAI's error envelope shape; the gateway additionally populates `type` (Anthropic-style category) and `param` when applicable.
-      properties:
-        error:
-          type: object
-          required:
-          - message
-          properties:
-            message:
-              type: string
-              description: A human-readable error message.
-            type:
-              type: string
-              enum:
-              - invalid_request_error
-              - authentication_error
-              - permission_error
-              - not_found_error
-              - rate_limit_error
-              - server_error
-              - provider_error
-              description: Anthropic-style high-level error category. Always present.
-            code:
-              type:
-              - string
-              - 'null'
-              description: 'A machine-readable error code. Currently emitted values: `unauthorized`, `forbidden`, `invalid_json`, `bad_model_id`, `model_not_found`, `provider_not_supported`, `invalid_tokenizer`, `invalid_request`, `usage_limit_exceeded`, `provider_error`, `internal_error`.'
-              example: bad_model_id
-            param:
-              type:
-              - string
-              - 'null'
-              description: Name of the request parameter that caused the error, when applicable.
-    Tool:
-      type: object
-      required:
-      - type
-      - function
-      properties:
-        type:
-          type: string
-          enum:
-          - function
-          description: The type of the tool. Currently, only `function` is supported.
-        function:
-          $ref: '#/components/schemas/FunctionDefinition'
-    CompressionModel:
-      type: string
-      description: Selects the compression bundle to apply to the request. Equivalent to the `X-Edgee-Compression-Model` header.
-      enum:
-      - claude
-      - opencode
-      - codex
-      - cursor
-    ToolChoiceSpecific:
-      type: object
-      required:
-      - type
-      - function
-      properties:
-        type:
-          type: string
-          enum:
-          - function
-          description: The type of the tool.
-        function:
-          $ref: '#/components/schemas/ToolChoiceFunction'
-    CompressionInfo:
-      type: object
-      description: Token compression metrics. Present in the response when token compression was applied to the request. The `usage.prompt_tokens` field reflects the compressed token count actually billed by the provider.
-      required:
-      - saved_tokens
-      - cost_savings
-      - reduction
-      - time_ms
-      properties:
-        saved_tokens:
-          type: integer
-          description: Number of input tokens saved by compression (original count minus compressed count).
-          minimum: 0
-          example: 450
-        cost_savings:
-          type: integer
-          description: 'Estimated cost savings in micro-units. Divide by `1000000` to convert to USD. Example: `27000` = $0.027 saved.'
-          minimum: 0
-          example: 27000
-        reduction:
-          type: number
-          description: Percentage reduction in input tokens. For example, `48` means the compressed prompt was 48% smaller than the original.
-          minimum: 0
-          maximum: 100
-          example: 48.99884991374353
-        time_ms:
-          type: integer
-          description: Time taken to perform compression, in milliseconds.
-          minimum: 0
-          example: 12
-    ChatCompletionChoice:
-      type: object
-      required:
-      - index
-      - message
-      properties:
-        index:
-          type: integer
-          description: The index of the choice in the list of choices.
-          minimum: 0
-        message:
-          $ref: '#/components/schemas/Message'
-        finish_reason:
-          type: string
-          enum:
-          - stop
-          - length
-          - content_filter
-          - tool_calls
-          description: The reason the model stopped generating tokens. This will be `stop` if the model hit a natural stop point or a provided stop sequence, `length` if the maximum number of tokens specified in the request was reached, `content_filter` if content was omitted due to a flag from our content filters, or `tool_calls` if the model called a tool.
-    FunctionDefinition:
+    FunctionCall:
       type: object
       required:
       - name
+      - arguments
       properties:
         name:
           type: string
-          description: The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
-        description:
+          description: The name of the function to call.
+        arguments:
           type: string
-          description: A description of what the function does, used by the model to choose when and how to call the function.
-        parameters:
-          type: object
-          description: The parameters the functions accepts, described as a JSON Schema object. See the guide for examples, and the JSON Schema reference for documentation about the format.
-          additionalProperties: true
-    OutputTokenDetails:
-      type: object
-      description: Additional details about output tokens.
-      properties:
-        reasoning_tokens:
-          type: integer
-          description: Number of reasoning tokens in the output.
-          minimum: 0
-    InputTokenDetails:
-      type: object
-      description: Additional details about input tokens.
-      properties:
-        cached_tokens:
-          type: integer
-          description: Number of cached tokens read from the prompt cache.
-          minimum: 0
-        cache_creation_tokens:
-          type: integer
-          description: Number of tokens written to the prompt cache (Anthropic-style cache creation).
-          minimum: 0
-    ToolCall:
-      type: object
-      required:
-      - id
-      - type
-      - function
-      properties:
-        id:
-          type: string
-          description: The ID of the tool call.
-        type:
-          type: string
-          enum:
-          - function
-          description: The type of the tool call.
-        function:
-          $ref: '#/components/schemas/FunctionCall'
-    ChatCompletionResponse:
-      type: object
-      required:
-      - id
-      - object
-      - created
-      - model
-      - choices
-      - usage
-      properties:
-        id:
-          type: string
-          description: A unique identifier for the chat completion.
-          example: chatcmpl-123
-        object:
-          type: string
-          enum:
-          - chat.completion
-          description: The object type, which is always `chat.completion`.
-        created:
-          type: integer
-          description: The Unix timestamp (in seconds) of when the chat completion was created.
-          example: 1677652288
-        model:
-          type: string
-          description: The model used for the chat completion.
-          example: openai/gpt-5.2
-        choices:
-          type: array
-          description: A list of chat completion choices. Can be more than one if n is greater than 1.
-          items:
-            $ref: '#/components/schemas/ChatCompletionChoice'
-        usage:
-          $ref: '#/components/schemas/Usage'
-        compression:
-          $ref: '#/components/schemas/CompressionInfo'
-        edgee_pending_id:
-          type: string
-          description: Present when one or more Edge Tool calls were deferred. Pass this value back as `edgee_pending_id` in the next request to resume the conversation with the tool results filled in.
-        edgee_tools_executed:
-          type: array
-          description: List of Edge Tools the gateway executed inline before returning. Empty or absent when no Edge Tools ran.
-          items:
-            $ref: '#/components/schemas/EdgeeToolExecuted'
+          description: The arguments to call the function with, as JSON.
     ChatCompletionRequest:
       type: object
       required:
@@ -467,14 +263,21 @@ components:
           description: When `true`, the response includes additional debug information. Equivalent to the `X-Edgee-Debug` header.
         compression_model:
           $ref: '#/components/schemas/CompressionModel'
-    ToolChoiceFunction:
+    FunctionDefinition:
       type: object
       required:
       - name
       properties:
         name:
           type: string
-          description: The name of the function to call.
+          description: The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
+        description:
+          type: string
+          description: A description of what the function does, used by the model to choose when and how to call the function.
+        parameters:
+          type: object
+          description: The parameters the functions accepts, described as a JSON Schema object. See the guide for examples, and the JSON Schema reference for documentation about the format.
+          additionalProperties: true
     Usage:
       type: object
       description: Usage statistics for the completion. In streaming responses, this is only present in the final chunk when `stream_options.include_usage` is true.
@@ -501,6 +304,194 @@ components:
           $ref: '#/components/schemas/InputTokenDetails'
         output_tokens_details:
           $ref: '#/components/schemas/OutputTokenDetails'
+    ToolCall:
+      type: object
+      required:
+      - id
+      - type
+      - function
+      properties:
+        id:
+          type: string
+          description: The ID of the tool call.
+        type:
+          type: string
+          enum:
+          - function
+          description: The type of the tool call.
+        function:
+          $ref: '#/components/schemas/FunctionCall'
+    ToolChoiceFunction:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          description: The name of the function to call.
+    CompressionModel:
+      type: string
+      description: Selects the compression bundle to apply to the request. Equivalent to the `X-Edgee-Compression-Model` header.
+      enum:
+      - claude
+      - opencode
+      - codex
+      - cursor
+    CompressionInfo:
+      type: object
+      description: Token compression metrics. Present in the response when token compression was applied to the request. The `usage.prompt_tokens` field reflects the compressed token count actually billed by the provider.
+      required:
+      - saved_tokens
+      - cost_savings
+      - reduction
+      - time_ms
+      properties:
+        saved_tokens:
+          type: integer
+          description: Number of input tokens saved by compression (original count minus compressed count).
+          minimum: 0
+          example: 450
+        cost_savings:
+          type: integer
+          description: 'Estimated cost savings in micro-units. Divide by `1000000` to convert to USD. Example: `27000` = $0.027 saved.'
+          minimum: 0
+          example: 27000
+        reduction:
+          type: number
+          description: Percentage reduction in input tokens. For example, `48` means the compressed prompt was 48% smaller than the original.
+          minimum: 0
+          maximum: 100
+          example: 48.99884991374353
+        time_ms:
+          type: integer
+          description: Time taken to perform compression, in milliseconds.
+          minimum: 0
+          example: 12
+    ChatCompletionChoice:
+      type: object
+      required:
+      - index
+      - message
+      properties:
+        index:
+          type: integer
+          description: The index of the choice in the list of choices.
+          minimum: 0
+        message:
+          $ref: '#/components/schemas/Message'
+        finish_reason:
+          type: string
+          enum:
+          - stop
+          - length
+          - content_filter
+          - tool_calls
+          description: The reason the model stopped generating tokens. This will be `stop` if the model hit a natural stop point or a provided stop sequence, `length` if the maximum number of tokens specified in the request was reached, `content_filter` if content was omitted due to a flag from our content filters, or `tool_calls` if the model called a tool.
+    ErrorResponse:
+      type: object
+      required:
+      - error
+      description: Error response. The `error` object follows OpenAI's error envelope shape; the gateway additionally populates `type` (Anthropic-style category) and `param` when applicable.
+      properties:
+        error:
+          type: object
+          required:
+          - message
+          properties:
+            message:
+              type: string
+              description: A human-readable error message.
+            type:
+              type: string
+              enum:
+              - invalid_request_error
+              - authentication_error
+              - permission_error
+              - not_found_error
+              - rate_limit_error
+              - server_error
+              - provider_error
+              description: Anthropic-style high-level error category. Always present.
+            code:
+              type:
+              - string
+              - 'null'
+              description: 'A machine-readable error code. Currently emitted values: `unauthorized`, `forbidden`, `invalid_json`, `bad_model_id`, `model_not_found`, `provider_not_supported`, `invalid_tokenizer`, `invalid_request`, `usage_limit_exceeded`, `provider_error`, `internal_error`.'
+              example: bad_model_id
+            param:
+              type:
+              - string
+              - 'null'
+              description: Name of the request parameter that caused the error, when applicable.
+    ToolChoiceTypedMode:
+      type: object
+      description: Typed-mode form of `tool_choice` — an object containing only a `type` field set to `auto` or `none`.
+      required:
+      - type
+      properties:
+        type:
+          type: string
+          enum:
+          - auto
+          - none
+    EdgeeToolExecuted:
+      type: object
+      description: Summary of an Edge Tool that was executed inline by the gateway.
+      required:
+      - name
+      - success
+      properties:
+        name:
+          type: string
+          description: Edge Tool identifier (e.g. `edgee_current_time`).
+          example: edgee_current_time
+        success:
+          type: boolean
+          description: Whether the tool returned successfully.
+    ChatCompletionResponse:
+      type: object
+      required:
+      - id
+      - object
+      - created
+      - model
+      - choices
+      - usage
+      properties:
+        id:
+          type: string
+          description: A unique identifier for the chat completion.
+          example: chatcmpl-123
+        object:
+          type: string
+          enum:
+          - chat.completion
+          description: The object type, which is always `chat.completion`.
+        created:
+          type: integer
+          description: The Unix timestamp (in seconds) of when the chat completion was created.
+          example: 1677652288
+        model:
+          type: string
+          description: The model used for the chat completion.
+          example: openai/gpt-5.2
+        choices:
+          type: array
+          description: A list of chat completion choices. Can be more than one if n is greater than 1.
+          items:
+            $ref: '#/components/schemas/ChatCompletionChoice'
+        usage:
+          $ref: '#/components/schemas/Usage'
+        compression:
+          $ref: '#/components/schemas/CompressionInfo'
+        edgee_pending_id:
+          type: string
+          description: Present when one or more Edge Tool calls were deferred. Pass this value back as `edgee_pending_id` in the next request to resume the conversation with the tool results filled in.
+        edgee_tools_executed:
+          type: array
+          description: List of Edge Tools the gateway executed inline before returning. Empty or absent when no Edge Tools ran.
+          items:
+            $ref: '#/components/schemas/EdgeeToolExecuted'
     Message:
       type: object
       required:
@@ -544,43 +535,52 @@ components:
           additionalProperties: true
           example:
             type: ephemeral
-    ToolChoiceTypedMode:
+    InputTokenDetails:
       type: object
-      description: Typed-mode form of `tool_choice` — an object containing only a `type` field set to `auto` or `none`.
+      description: Additional details about input tokens.
+      properties:
+        cached_tokens:
+          type: integer
+          description: Number of cached tokens read from the prompt cache.
+          minimum: 0
+        cache_creation_tokens:
+          type: integer
+          description: Number of tokens written to the prompt cache (Anthropic-style cache creation).
+          minimum: 0
+    ToolChoiceSpecific:
+      type: object
       required:
       - type
+      - function
       properties:
         type:
           type: string
           enum:
-          - auto
-          - none
-    EdgeeToolExecuted:
-      type: object
-      description: Summary of an Edge Tool that was executed inline by the gateway.
-      required:
-      - name
-      - success
-      properties:
-        name:
-          type: string
-          description: Edge Tool identifier (e.g. `edgee_current_time`).
-          example: edgee_current_time
-        success:
-          type: boolean
-          description: Whether the tool returned successfully.
-    FunctionCall:
+          - function
+          description: The type of the tool.
+        function:
+          $ref: '#/components/schemas/ToolChoiceFunction'
+    Tool:
       type: object
       required:
-      - name
-      - arguments
+      - type
+      - function
       properties:
-        name:
+        type:
           type: string
-          description: The name of the function to call.
-        arguments:
-          type: string
-          description: The arguments to call the function with, as JSON.
+          enum:
+          - function
+          description: The type of the tool. Currently, only `function` is supported.
+        function:
+          $ref: '#/components/schemas/FunctionDefinition'
+    OutputTokenDetails:
+      type: object
+      description: Additional details about output tokens.
+      properties:
+        reasoning_tokens:
+          type: integer
+          description: Number of reasoning tokens in the output.
+          minimum: 0
   securitySchemes:
     bearerAuth:
       type: http

@@ -223,96 +223,9 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    ErrorResponse:
-      type: object
-      required:
-      - error
-      description: Error response. The `error` object follows OpenAI's error envelope shape; the gateway additionally populates `type` (Anthropic-style category) and `param` when applicable.
-      properties:
-        error:
-          type: object
-          required:
-          - message
-          properties:
-            message:
-              type: string
-              description: A human-readable error message.
-            type:
-              type: string
-              enum:
-              - invalid_request_error
-              - authentication_error
-              - permission_error
-              - not_found_error
-              - rate_limit_error
-              - server_error
-              - provider_error
-              description: Anthropic-style high-level error category. Always present.
-            code:
-              type:
-              - string
-              - 'null'
-              description: 'A machine-readable error code. Currently emitted values: `unauthorized`, `forbidden`, `invalid_json`, `bad_model_id`, `model_not_found`, `provider_not_supported`, `invalid_tokenizer`, `invalid_request`, `usage_limit_exceeded`, `provider_error`, `internal_error`.'
-              example: bad_model_id
-            param:
-              type:
-              - string
-              - 'null'
-              description: Name of the request parameter that caused the error, when applicable.
-    ResponsesResponse:
-      type: object
-      required:
-      - id
-      - object
-      - status
-      - created_at
-      - model
-      - output
-      - usage
-      properties:
-        id:
-          type: string
-          description: Unique identifier for the response, prefixed with `resp_`.
-          example: resp_abc123
-        object:
-          type: string
-          enum:
-          - response
-        status:
-          type: string
-          enum:
-          - completed
-          - in_progress
-          description: '`completed` for non-streaming responses; `in_progress` is emitted on the initial `response.created` SSE event.'
-        created_at:
-          type: number
-          description: Unix timestamp (as a float) of when the response was created.
-          example: 1677652288.0
-        model:
-          type: string
-          description: The model used to generate the response.
-          example: openai/gpt-4o
-        output:
-          type: array
-          description: Array of output items produced by the model.
-          items:
-            $ref: '#/components/schemas/ResponsesOutputItem'
-        usage:
-          $ref: '#/components/schemas/ResponsesUsage'
-    ResponsesContentPart:
-      description: A typed content part within a message item.
+    ResponsesOutputContent:
+      description: A content part within an output item.
       oneOf:
-      - type: object
-        required:
-        - type
-        - text
-        properties:
-          type:
-            type: string
-            enum:
-            - input_text
-          text:
-            type: string
       - type: object
         required:
         - type
@@ -327,22 +240,21 @@ components:
       - type: object
         required:
         - type
-        - text
+        - id
+        - name
+        - arguments
         properties:
           type:
             type: string
             enum:
-            - text
-          text:
+            - function_call
+          id:
             type: string
-    CompressionModel:
-      type: string
-      description: Selects the compression bundle to apply to the request. Equivalent to the `X-Edgee-Compression-Model` header.
-      enum:
-      - claude
-      - opencode
-      - codex
-      - cursor
+          name:
+            type: string
+          arguments:
+            type: string
+            description: Tool call arguments as a JSON string.
     ResponsesTool:
       type: object
       description: Tool definition in the Responses API flat format. Unlike Chat Completions, there is no nested `function` key.
@@ -364,6 +276,101 @@ components:
           type: object
           description: JSON Schema object describing the function's parameters.
           additionalProperties: true
+    ResponsesInputItem:
+      description: A single item in the `input` array. Either a message turn, an assistant function call, or a function call output.
+      oneOf:
+      - type: object
+        title: Message
+        required:
+        - role
+        - content
+        properties:
+          role:
+            type: string
+            enum:
+            - user
+            - assistant
+            - system
+            - developer
+            description: The role of the message author.
+          content:
+            description: Message content. Either a plain string or an array of typed content parts.
+            oneOf:
+            - type: string
+            - type: array
+              items:
+                $ref: '#/components/schemas/ResponsesContentPart'
+      - type: object
+        title: Function call
+        required:
+        - type
+        - call_id
+        - name
+        - arguments
+        properties:
+          type:
+            type: string
+            enum:
+            - function_call
+          call_id:
+            type: string
+            description: Identifier linking this call to its `function_call_output`.
+            example: call_abc123
+          name:
+            type: string
+            description: Name of the function the assistant is calling.
+            example: get_weather
+          arguments:
+            type: string
+            description: Arguments passed to the function, encoded as a JSON string.
+            example: '{"location": "Paris"}'
+      - type: object
+        title: Function call output
+        required:
+        - type
+        - call_id
+        - output
+        properties:
+          type:
+            type: string
+            enum:
+            - function_call_output
+          call_id:
+            type: string
+            description: Identifier matching the `function_call` item this is responding to.
+            example: call_abc123
+          output:
+            type: string
+            description: Tool result, encoded as a string (typically JSON).
+            example: '{"temperature": 22}'
+    CompressionModel:
+      type: string
+      description: Selects the compression bundle to apply to the request. Equivalent to the `X-Edgee-Compression-Model` header.
+      enum:
+      - claude
+      - opencode
+      - codex
+      - cursor
+    ResponsesUsage:
+      type: object
+      description: Token usage statistics for the response.
+      required:
+      - input_tokens
+      - output_tokens
+      - total_tokens
+      properties:
+        input_tokens:
+          type: integer
+          description: Tokens in the input.
+          minimum: 0
+        output_tokens:
+          type: integer
+          description: Tokens in the output.
+          minimum: 0
+        total_tokens:
+          type: integer
+          description: Total tokens used.
+          minimum: 0
     ResponsesRequest:
       type: object
       required:
@@ -436,104 +443,78 @@ components:
           description: Pending operation ID when continuing a conversation after Edge Tool execution. The gateway injects stored Edge Tool results into the conversation history.
         compression_model:
           $ref: '#/components/schemas/CompressionModel'
-    ResponsesUsage:
-      type: object
-      description: Token usage statistics for the response.
-      required:
-      - input_tokens
-      - output_tokens
-      - total_tokens
-      properties:
-        input_tokens:
-          type: integer
-          description: Tokens in the input.
-          minimum: 0
-        output_tokens:
-          type: integer
-          description: Tokens in the output.
-          minimum: 0
-        total_tokens:
-          type: integer
-          description: Total tokens used.
-          minimum: 0
-    ResponsesInputItem:
-      description: A single item in the `input` array. Either a message turn, an assistant function call, or a function call output.
+    ResponsesContentPart:
+      description: A typed content part within a message item.
       oneOf:
       - type: object
-        title: Message
-        required:
-        - role
-        - content
-        properties:
-          role:
-            type: string
-            enum:
-            - user
-            - assistant
-            - system
-            - developer
-            description: The role of the message author.
-          content:
-            description: Message content. Either a plain string or an array of typed content parts.
-            oneOf:
-            - type: string
-            - type: array
-              items:
-                $ref: '#/components/schemas/ResponsesContentPart'
-      - type: object
-        title: Function call
         required:
         - type
-        - call_id
-        - name
-        - arguments
+        - text
         properties:
           type:
             type: string
             enum:
-            - function_call
-          call_id:
+            - input_text
+          text:
             type: string
-            description: Identifier linking this call to its `function_call_output`.
-            example: call_abc123
-          name:
-            type: string
-            description: Name of the function the assistant is calling.
-            example: get_weather
-          arguments:
-            type: string
-            description: Arguments passed to the function, encoded as a JSON string.
-            example: '{"location": "Paris"}'
       - type: object
-        title: Function call output
         required:
         - type
-        - call_id
-        - output
+        - text
         properties:
           type:
             type: string
             enum:
-            - function_call_output
-          call_id:
+            - output_text
+          text:
             type: string
-            description: Identifier matching the `function_call` item this is responding to.
-            example: call_abc123
-          output:
+      - type: object
+        required:
+        - type
+        - text
+        properties:
+          type:
             type: string
-            description: Tool result, encoded as a string (typically JSON).
-            example: '{"temperature": 22}'
-    ToolChoiceTypedMode:
+            enum:
+            - text
+          text:
+            type: string
+    ErrorResponse:
       type: object
-      description: Typed-mode form of `tool_choice` — an object containing only a `type` field set to `auto` or `none`.
       required:
-      - type
+      - error
+      description: Error response. The `error` object follows OpenAI's error envelope shape; the gateway additionally populates `type` (Anthropic-style category) and `param` when applicable.
       properties:
-        type:
-          type: string
-          enum:
-          - auto
-          - none
+        error:
+          type: object
+          required:
+          - message
+          properties:
+            message:
+              type: string
+              description: A human-readable error message.
+            type:
+              type: string
+              enum:
+              - invalid_request_error
+              - authentication_error
+              - permission_error
+              - not_found_error
+              - rate_limit_error
+              - server_error
+              - provider_error
+              description: Anthropic-style high-level error category. Always present.
+            code:
+              type:
+              - string
+              - 'null'
+              description: 'A machine-readable error code. Currently emitted values: `unauthorized`, `forbidden`, `invalid_json`, `bad_model_id`, `model_not_found`, `provider_not_supported`, `invalid_tokenizer`, `invalid_request`, `usage_limit_exceeded`, `provider_error`, `internal_error`.'
+              example: bad_model_id
+            param:
+              type:
+              - string
+              - 'null'
+              description: Name of the request parameter that caused the error, when applicable.
     ResponsesToolChoiceFunction:
       type: object
       description: Forces the model to call the specified function.
@@ -548,6 +529,57 @@ components:
         name:
           type: string
           description: Name of the function to call.
+    ToolChoiceTypedMode:
+      type: object
+      description: Typed-mode form of `tool_choice` — an object containing only a `type` field set to `auto` or `none`.
+      required:
+      - type
+      properties:
+        type:
+          type: string
+          enum:
+          - auto
+          - none
+    ResponsesResponse:
+      type: object
+      required:
+      - id
+      - object
+      - status
+      - created_at
+      - model
+      - output
+      - usage
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the response, prefixed with `resp_`.
+          example: resp_abc123
+        object:
+          type: string
+          enum:
+          - response
+        status:
+          type: string
+          enum:
+          - completed
+          - in_progress
+          description: '`completed` for non-streaming responses; `in_progress` is emitted on the initial `response.created` SSE event.'
+        created_at:
+          type: number
+          description: Unix timestamp (as a float) of when the response was created.
+          example: 1677652288.0
+        model:
+          type: string
+          description: The model used to generate the response.
+          example: openai/gpt-4o
+        output:
+          type: array
+          description: Array of output items produced by the model.
+          items:
+            $ref: '#/components/schemas/ResponsesOutputItem'
+        usage:
+          $ref: '#/components/schemas/ResponsesUsage'
     ResponsesOutputItem:
       type: object
       required:
@@ -580,38 +612,6 @@ components:
           description: Array of content parts within this output item.
           items:
             $ref: '#/components/schemas/ResponsesOutputContent'
-    ResponsesOutputContent:
-      description: A content part within an output item.
-      oneOf:
-      - type: object
-        required:
-        - type
-        - text
-        properties:
-          type:
-            type: string
-            enum:
-            - output_text
-          text:
-            type: string
-      - type: object
-        required:
-        - type
-        - id
-        - name
-        - arguments
-        properties:
-          type:
-            type: string
-            enum:
-            - function_call
-          id:
-            type: string
-          name:
-            type: string
-          arguments:
-            type: string
-            description: Tool call arguments as a JSON string.
   securitySchemes:
     bearerAuth:
       type: http

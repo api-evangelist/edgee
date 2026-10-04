@@ -76,9 +76,10 @@ tags_raw:
 apis:
 - aid: edgee:edgee-console
   name: Edgee Console API
-  description: 'Management API for an Edgee organization: export AI Gateway usage and cost data as CSV
-    or JSON, create/list/update/delete AI Gateway API keys, and configure custom BYOK provider keys. Bearer-token
-    authenticated with a Console token created in the Edgee Console.'
+  description: >-
+    Management API for an Edgee organization: export AI Gateway usage and cost data as CSV or JSON, create/list/update/delete
+    AI Gateway API keys, and configure custom BYOK provider keys. Bearer-token authenticated with a Console
+    token created in the Edgee Console.
   humanURL: https://www.edgee.ai/docs/api-reference/console-api-setup
   baseURL: https://api.edgee.app
   tags:
@@ -96,20 +97,6 @@ apis:
     url: https://www.edgee.ai/docs/api-reference/console-api-setup
   - type: Authentication
     url: https://www.edgee.ai/docs/api-reference/console-api-setup
-- aid: edgee:edgee-chat-api
-  name: Edgee Chat API
-  description: Chat completion endpoints (OpenAI format)
-  humanURL: https://www.edgee.ai/docs/api-reference
-  baseURL: https://edgee.io
-  tags:
-  - Chat
-  properties:
-  - type: OpenAPI
-    url: openapi/edgee-chat-api-openapi.yml
-  - type: Documentation
-    url: https://www.edgee.ai/docs/api-reference
-  - type: Authentication
-    url: https://www.edgee.ai/docs/api-reference/authentication
 - aid: edgee:edgee-compress-api
   name: Edgee Compress API
   description: Standalone token compression endpoint
@@ -178,6 +165,20 @@ apis:
   properties:
   - type: OpenAPI
     url: openapi/edgee-tokens-api-openapi.yml
+  - type: Documentation
+    url: https://www.edgee.ai/docs/api-reference
+  - type: Authentication
+    url: https://www.edgee.ai/docs/api-reference/authentication
+- aid: edgee:edgee-chat-completions-api
+  name: Edgee Chat Completions API
+  description: Chat completion endpoints (OpenAI format)
+  humanURL: https://www.edgee.ai/docs/api-reference/console-api-setup
+  baseURL: https://api.edgee.app
+  tags:
+  - Chat Completions
+  properties:
+  - type: OpenAPI
+    url: openapi/edgee-chat-completions-api-openapi.yml
   - type: Documentation
     url: https://www.edgee.ai/docs/api-reference
   - type: Authentication

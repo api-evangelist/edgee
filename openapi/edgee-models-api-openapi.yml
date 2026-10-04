@@ -52,6 +52,31 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
+    Model:
+      type: object
+      required:
+      - id
+      - object
+      - created
+      - owned_by
+      properties:
+        id:
+          type: string
+          description: 'The model identifier, which can be referenced in the API. Format: `{author_id}/{model_id}`.'
+          example: openai/gpt-5.2
+        object:
+          type: string
+          enum:
+          - model
+          description: The object type, which is always `model`.
+        created:
+          type: integer
+          description: The Unix timestamp (in seconds) when the model was created.
+          example: 1677610602
+        owned_by:
+          type: string
+          description: The organization that owns the model.
+          example: openai
     ErrorResponse:
       type: object
       required:
@@ -104,31 +129,6 @@ components:
           description: The list of models.
           items:
             $ref: '#/components/schemas/Model'
-    Model:
-      type: object
-      required:
-      - id
-      - object
-      - created
-      - owned_by
-      properties:
-        id:
-          type: string
-          description: 'The model identifier, which can be referenced in the API. Format: `{author_id}/{model_id}`.'
-          example: openai/gpt-5.2
-        object:
-          type: string
-          enum:
-          - model
-          description: The object type, which is always `model`.
-        created:
-          type: integer
-          description: The Unix timestamp (in seconds) when the model was created.
-          example: 1677610602
-        owned_by:
-          type: string
-          description: The organization that owns the model.
-          example: openai
   securitySchemes:
     bearerAuth:
       type: http
