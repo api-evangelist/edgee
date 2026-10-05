@@ -1,0 +1,12 @@
+{
+ "url": "https://www.edgee.ai/docs/openapi.json",
+ "requested_url": "https://www.edgee.ai/docs/openapi.json",
+ "status": 200,
+ "content_type": "application/json",
+ "bytes": 74129,
+ "sha256": "cadd11b5ea3220e46705579e485630dcfd04da23cd131a3b4c907aa944689ad1",
+ "fetched_at": "2026-10-04",
+ "fetched_by": "APIEvangelist-Harvest/1.0 (+https://apievangelist.com)",
+ "match": "equivalent",
+ "note": "Re-fetched from the provider by verify-openapi-sources.py; the provider's current document describes the same operations (Jaccard 1.0), but the bytes differ, so the archive is an earlier or reformatted copy."
+}
