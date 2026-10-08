@@ -64,3 +64,36 @@ self_hosting:
   modes: [docker-compose, kubernetes-helm]
   note: 'The AI Gateway can be run on the customer''s own infrastructure, connected or air-gapped
     (headless). Pricing for self-hosted deployment is not published; it sits under Enterprise.'
+x-canonical:
+  generated: '2026-10-08'
+  vocabulary: all/0-working/economics/plans-canonical.yml
+  models:
+  - free
+  - metered
+  - seat
+  units:
+  - seat
+  plans:
+  - name: Free
+    access: other
+    model: free
+    model_how: derived
+    units:
+    - seat
+    periods:
+    - month
+  - name: Team
+    access: other
+    model: seat
+    model_how: derived
+    units:
+    - seat
+    periods:
+    - month
+  - name: Enterprise
+    access: other
+    model: metered
+    model_how: derived
+    units: []
+    periods:
+    - term
