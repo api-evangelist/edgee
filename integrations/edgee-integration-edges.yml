@@ -15,7 +15,7 @@ edges:
     note: 'edgee declares OpenAI compatibility: ''description: Edgee is an edge-native AI Gateway with private model
       hosting, automatic model selection, cost audits/alerts, and edge tools. This API is OpenAI-co'''
     detected_by: sweep-model-routing.py
-    detected: '2026-10-13'
+    detected: '2026-10-15'
   detected_by: sweep-model-routing.py
   first_seen: '2026-10-13'
 generated: '2026-10-13'
