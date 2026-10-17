@@ -52,31 +52,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    Model:
-      type: object
-      required:
-      - id
-      - object
-      - created
-      - owned_by
-      properties:
-        id:
-          type: string
-          description: 'The model identifier, which can be referenced in the API. Format: `{author_id}/{model_id}`.'
-          example: openai/gpt-5.2
-        object:
-          type: string
-          enum:
-          - model
-          description: The object type, which is always `model`.
-        created:
-          type: integer
-          description: The Unix timestamp (in seconds) when the model was created.
-          example: 1677610602
-        owned_by:
-          type: string
-          description: The organization that owns the model.
-          example: openai
     ErrorResponse:
       type: object
       required:
@@ -113,6 +88,31 @@ components:
               - string
               - 'null'
               description: Name of the request parameter that caused the error, when applicable.
+    Model:
+      type: object
+      required:
+      - id
+      - object
+      - created
+      - owned_by
+      properties:
+        id:
+          type: string
+          description: 'The model identifier, which can be referenced in the API. Format: `{author_id}/{model_id}`.'
+          example: openai/gpt-5.2
+        object:
+          type: string
+          enum:
+          - model
+          description: The object type, which is always `model`.
+        created:
+          type: integer
+          description: The Unix timestamp (in seconds) when the model was created.
+          example: 1677610602
+        owned_by:
+          type: string
+          description: The organization that owns the model.
+          example: openai
     ModelsResponse:
       type: object
       required:

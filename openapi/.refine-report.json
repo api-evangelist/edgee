@@ -11,16 +11,19 @@
     "edgee-responses-api-openapi.yml",
     "edgee-tokens-api-openapi.yml"
   ],
-  "archived": [],
+  "archived": [
+    "deleted 1 superseded output(s) from the previous generation"
+  ],
   "errors": [],
   "warnings": [],
   "notes": [
     "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
     "edgee-openapi-original.json: upgraded openapi 3.0.1 -> OpenAPI 3.2.0",
-    "apis.yml register: already-registered"
+    "superseded outputs removed: edgee-chat-completions-api-openapi.yml",
+    "apis.yml register: written (+1 apis, 7 total)"
   ],
   "skipped": [
-    "edgee-chat-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "edgee-chat-completions-api-openapi.yml: previously refined output, superseded by openapi/_original/",
     "edgee-compress-api-openapi.yml: previously refined output, superseded by openapi/_original/",
     "edgee-messages-api-openapi.yml: previously refined output, superseded by openapi/_original/",
     "edgee-models-api-openapi.yml: previously refined output, superseded by openapi/_original/",
