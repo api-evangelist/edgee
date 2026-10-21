@@ -1,23 +1,4 @@
 edges:
-- partner_name: OpenAI
-  partner: openai
-  partner_match: domain
-  type: contract
-  channel: provider-built
-  relationship: compatible
-  direction: provider-built
-  evidence: https://github.com/api-evangelist/edgee/blob/main/openapi/edgee-chat-completions-api-openapi.yml#L5
-  contract_reference:
-    repo: edgee
-    spec_file: edgee-chat-completions-api-openapi.yml
-    property: description
-    value: OpenAI-compatible
-    note: 'edgee declares OpenAI compatibility: ''description: Edgee is an edge-native AI Gateway with private model
-      hosting, automatic model selection, cost audits/alerts, and edge tools. This API is OpenAI-co'''
-    detected_by: sweep-model-routing.py
-    detected: '2026-10-15'
-  detected_by: sweep-model-routing.py
-  first_seen: '2026-10-13'
 - partner_name: Go module proxy
   partner: null
   partner_match: null
@@ -78,6 +59,52 @@ edges:
     detected: '2026-10-18'
   detected_by: sweep-official-sdks.py
   first_seen: '2026-10-18'
+- partner_name: OpenAI
+  partner: openai
+  partner_match: domain
+  type: contract
+  channel: provider-built
+  relationship: compatible
+  direction: provider-built
+  evidence: https://github.com/api-evangelist/edgee/blob/main/openapi/edgee-chat-completions-api-openapi.yml#L5
+  contract_reference:
+    repo: edgee
+    spec_file: edgee-chat-completions-api-openapi.yml
+    property: description
+    value: OpenAI-compatible
+    note: 'edgee declares OpenAI compatibility: ''description: Edgee is an edge-native AI Gateway with private model
+      hosting, automatic model selection, cost audits/alerts, and edge tools. This API is OpenAI-co'''
+    detected_by: sweep-model-routing.py
+    detected: '2026-10-19'
+  detected_by: sweep-model-routing.py
+  first_seen: '2026-10-13'
+- partner_name: PyPI organization accounts
+  partner: pypi
+  partner_match: register
+  type: register
+  channel: package-registry
+  relationship: distribution-channel
+  direction: third-party
+  evidence: https://pypi.org/org/Edgee/
+  category: PyPI organization
+  contract_reference:
+    register: PyPI organization accounts
+    spec_file: null
+    role: pypi-organization
+    registered_name: Edgee
+    register_id: https://pypi.org/org/Edgee/
+    org_display_name: Edgee
+    matched_by: verified-package
+    packages_verified:
+    - edgee
+    org_projects: 1
+    identity_note: the org is reached through packages sweep-official-sdks / official-clis verified as the provider's
+      own (domain / org leg AND publisher leg); never by the org name
+    signal_note: 'participation only (python): an organization account on PyPI, not a package count'
+    detected_by: sweep-ide-extension-marketplaces.py
+    detected: '2026-10-20'
+  detected_by: sweep-ide-extension-marketplaces.py
+  first_seen: '2026-10-20'
 generated: '2026-10-13'
 method: searched
 checked:
@@ -88,11 +115,13 @@ checked:
 - https://registry.npmjs.org
 - https://repo1.maven.org/maven2
 - https://rubygems.org/api/v1
+- https://pypi.org/org/{org}/
+- https://pypi.org/pypi/{package}/json
 source:
-- https://api.nuget.org/v3
-- https://crates.io/api/v1
-- https://proxy.golang.org
-- https://pypi.org/pypi
 - https://registry.npmjs.org
-- https://repo1.maven.org/maven2
+- https://pypi.org/pypi
 - https://rubygems.org/api/v1
+- https://crates.io/api/v1
+- https://repo1.maven.org/maven2
+- https://api.nuget.org/v3
+- https://proxy.golang.org
